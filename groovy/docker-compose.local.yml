@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: groovy-mysql-local
+    restart: unless-stopped
+    environment:
+      # application.yml의 default 값(SPRING_DEV_DB_*)과 반드시 일치시켜 별도 env 설정 없이 바로 구동되도록 함
+      MYSQL_DATABASE: groovy_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - groovy-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  groovy-mysql-data:

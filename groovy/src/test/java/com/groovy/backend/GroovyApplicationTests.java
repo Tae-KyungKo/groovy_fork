@@ -1,4 +1,4 @@
-package team26.groovy;
+package com.groovy.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
