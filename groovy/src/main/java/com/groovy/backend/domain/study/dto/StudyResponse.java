@@ -10,6 +10,8 @@ public record StudyResponse(
 	String description,
 	Long leaderId,
 	String leaderName,
+	LocalDateTime meetingStartTime,
+	LocalDateTime meetingEndTime,
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt
 ) {
@@ -21,6 +23,8 @@ public record StudyResponse(
 			study.getDescription(),
 			study.getLeader().getId(),
 			study.getLeader().getName(),
+			study.getMeetingStartTime(),
+			study.getMeetingEndTime(),
 			study.getCreatedAt(),
 			study.getUpdatedAt()
 		);

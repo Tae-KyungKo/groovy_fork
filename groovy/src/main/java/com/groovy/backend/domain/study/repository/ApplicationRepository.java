@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.groovy.backend.domain.study.Application;
+import com.groovy.backend.domain.study.ApplicationStatus;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
@@ -14,6 +15,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 	Optional<Application> findByStudyIdAndApplicantId(Long studyId, Long applicantId);
 
 	List<Application> findByStudyId(Long studyId);
+
+	List<Application> findByApplicantIdAndStatus(Long applicantId, ApplicationStatus status);
 
 	void deleteAllByStudyId(Long studyId);
 }

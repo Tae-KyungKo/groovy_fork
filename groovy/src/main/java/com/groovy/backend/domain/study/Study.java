@@ -1,5 +1,7 @@
 package com.groovy.backend.domain.study;
 
+import java.time.LocalDateTime;
+
 import com.groovy.backend.common.entity.BaseTimeEntity;
 import com.groovy.backend.domain.user.User;
 
@@ -37,16 +39,27 @@ public class Study extends BaseTimeEntity {
 	@JoinColumn(name = "leader_id", nullable = false)
 	private User leader;
 
+	// 스터디 공식 일정(캘린더 통합 조회용). 아직 별도 일정 도메인이 없어 임시로 Study에 보관한다.
+	@Column
+	private LocalDateTime meetingStartTime;
+
+	@Column
+	private LocalDateTime meetingEndTime;
+
 	@Builder
-	public Study(String title, String description, User leader) {
+	public Study(String title, String description, User leader, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
 		this.leader = leader;
+		this.meetingStartTime = meetingStartTime;
+		this.meetingEndTime = meetingEndTime;
 	}
 
-	public void update(String title, String description) {
+	public void update(String title, String description, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
+		this.meetingStartTime = meetingStartTime;
+		this.meetingEndTime = meetingEndTime;
 	}
 
 	public boolean isLeader(Long userId) {

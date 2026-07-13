@@ -1,5 +1,7 @@
 package com.groovy.backend.domain.study.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groovy.backend.common.response.ApiResponse;
 import com.groovy.backend.domain.study.dto.StudyCreateRequest;
+import com.groovy.backend.domain.study.dto.StudyMatchResponse;
 import com.groovy.backend.domain.study.dto.StudyResponse;
 import com.groovy.backend.domain.study.dto.StudyUpdateRequest;
 import com.groovy.backend.domain.study.service.StudyService;
@@ -48,6 +51,12 @@ public class StudyController {
 	@GetMapping("/{studyId}")
 	public ApiResponse<StudyResponse> getStudy(@PathVariable Long studyId) {
 		return ApiResponse.of("SUCCESS", "스터디 상세 조회에 성공했습니다.", studyService.getStudy(studyId));
+	}
+
+	// 리터럴 경로("/match")가 "/{studyId}" 변수 경로보다 우선 매칭되므로 순서와 무관하게 안전하다.
+	@GetMapping("/match")
+	public ApiResponse<List<StudyMatchResponse>> getMatchedStudies(@AuthenticationPrincipal String email) {
+		return ApiResponse.of("SUCCESS", "태그 매칭 스터디 조회에 성공했습니다.", studyService.getMatchedStudies(email));
 	}
 
 	@PutMapping("/{studyId}")
