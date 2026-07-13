@@ -1,0 +1,393 @@
+:root {
+  --text: #4b5563;
+  --text-h: #111827;
+  --bg: #ffffff;
+  --bg-muted: #f9fafb;
+  --border: #e5e7eb;
+  --accent: #7c3aed;
+  --accent-contrast: #ffffff;
+  --danger: #dc2626;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font: 16px/1.5 var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #14151a;
+    --bg-muted: #1c1d24;
+    --border: #2e303a;
+    --accent: #a78bfa;
+    --accent-contrast: #14151a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-h);
+  font-weight: 600;
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+.app-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header .brand {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.app-header nav a {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-loading,
+.empty {
+  color: var(--text);
+  padding: 24px 0;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--bg-muted);
+}
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding-top: 40px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.form-inline {
+  flex-direction: row;
+  align-items: flex-end;
+  max-width: none;
+  flex-wrap: wrap;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.form input,
+.form textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+button,
+.button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondary,
+.button.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-h);
+}
+
+button.danger,
+.button.danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.study-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.study-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--bg-muted);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.study-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.match-score {
+  font-size: 12px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.description {
+  font-size: 14px;
+}
+
+.capacity {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button.tag-chip.active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.status {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.status-approved {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.status-rejected {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--text);
+}
+
+.detail-list dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.notification-bell {
+  position: relative;
+}
+
+.icon-button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  padding: 4px;
+  position: relative;
+  color: var(--text-h);
+}
+
+.badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: 32px;
+  width: 280px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 10;
+}
+
+.notification-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notification-dropdown li {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-muted);
+  font-size: 13px;
+}
+
+.notification-dropdown time {
+  font-size: 11px;
+  color: var(--text);
+}
