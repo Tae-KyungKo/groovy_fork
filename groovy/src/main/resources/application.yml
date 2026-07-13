@@ -9,6 +9,15 @@ spring:
     username: ${SPRING_DEV_DB_USERNAME:root}
     password: ${SPRING_DEV_DB_PASSWORD:rootpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 가상 스레드는 요청마다 캐리어 스레드를 점유하지 않고 반환하므로 동시 요청 수가 급증할 수 있다.
+      # DB 커넥션이 병목이 되지 않도록 풀 사이즈를 넉넉히 확보하고, 고갈 시 무한 대기 대신 빠르게 실패시킨다.
+      pool-name: GroovyHikariPool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:3000}
+      idle-timeout: 600000
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
