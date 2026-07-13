@@ -18,6 +18,12 @@ public class GlobalExceptionHandler {
 			.body(ApiResponse.of("FAIL", e.getMessage()));
 	}
 
+	@ExceptionHandler(ForbiddenException.class)
+	public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException e) {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+			.body(ApiResponse.of("FAIL", e.getMessage()));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException e) {
 		String message = e.getBindingResult().getFieldErrors().stream()

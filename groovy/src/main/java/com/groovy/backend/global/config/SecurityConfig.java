@@ -2,6 +2,7 @@ package com.groovy.backend.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,6 +27,12 @@ public class SecurityConfig {
 		"/api/health"
 	};
 
+	// 스터디 목록/상세 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
+	private static final String[] PERMIT_ALL_GET_PATTERNS = {
+		"/api/studies",
+		"/api/studies/{studyId}"
+	};
+
 	private final TokenProvider tokenProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -38,6 +45,7 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(PERMIT_ALL_PATTERNS).permitAll()
+				.requestMatchers(HttpMethod.GET, PERMIT_ALL_GET_PATTERNS).permitAll()
 				.anyRequest().authenticated())
 			.exceptionHandling(handler -> handler.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 			.addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
