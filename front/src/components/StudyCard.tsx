@@ -3,7 +3,7 @@ import type { Study, Tag } from "../types";
 
 interface StudyCardProps {
   study: Study;
-  tagsById: Map<string, Tag>;
+  tagsById: Map<number, Tag>;
   matchScore?: number;
 }
 

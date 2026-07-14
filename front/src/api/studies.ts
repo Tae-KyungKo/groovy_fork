@@ -1,4 +1,4 @@
-import type { Application, ApplicationStatus, Study } from "../types";
+import type { Application, ApplicationStatus, DayOfWeek, PageResponse, Study } from "../types";
 import { apiFetch, USE_MOCK } from "./client";
 import { applications, delay, nextId, persist, requireUser, studies } from "./mockStore";
 
@@ -6,17 +6,35 @@ export interface StudyPayload {
   title: string;
   description: string;
   capacity: number;
-  tagIds: string[];
+  tagIds: number[];
+  meetingDays: DayOfWeek[];
+  meetingStartTime: string;
+  meetingEndTime: string;
 }
 
-export async function listStudies(): Promise<Study[]> {
+export interface StudyListResult {
+  studies: Study[];
+  page: number;
+  totalPages: number;
+}
+
+const MOCK_PAGE_SIZE = 4;
+
+export async function listStudies(page = 0): Promise<StudyListResult> {
   if (USE_MOCK) {
     await delay();
-    return [...studies].sort(
+    const sorted = [...studies].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
+    const start = page * MOCK_PAGE_SIZE;
+    return {
+      studies: sorted.slice(start, start + MOCK_PAGE_SIZE),
+      page,
+      totalPages: Math.max(1, Math.ceil(sorted.length / MOCK_PAGE_SIZE)),
+    };
   }
-  return apiFetch<Study[]>("/api/studies");
+  const result = await apiFetch<PageResponse<Study>>(`/api/studies?page=${page}`);
+  return { studies: result.content, page: result.number, totalPages: result.totalPages };
 }
 
 export async function getStudy(studyId: string): Promise<Study> {
@@ -39,8 +57,11 @@ export async function createStudy(payload: StudyPayload): Promise<Study> {
       description: payload.description,
       capacity: payload.capacity,
       tagIds: payload.tagIds,
-      ownerId: user.id,
-      ownerName: user.name,
+      meetingDays: payload.meetingDays,
+      meetingStartTime: payload.meetingStartTime,
+      meetingEndTime: payload.meetingEndTime,
+      leaderId: user.id,
+      leaderName: user.name,
       memberCount: 1,
       createdAt: new Date().toISOString(),
     };
