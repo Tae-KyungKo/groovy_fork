@@ -2,8 +2,8 @@ import type { Tag } from "../types";
 
 interface TagPickerProps {
   tags: Tag[];
-  selected: string[];
-  onToggle: (tagId: string) => void;
+  selected: number[];
+  onToggle: (tagId: number) => void;
 }
 
 export function TagPicker({ tags, selected, onToggle }: TagPickerProps) {
