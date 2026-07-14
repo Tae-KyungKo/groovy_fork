@@ -153,6 +153,7 @@ a {
 }
 
 .form input,
+.form select,
 .form textarea {
   font: inherit;
   padding: 8px 10px;
@@ -309,6 +310,11 @@ button.tag-chip.active {
 .status-rejected {
   color: var(--danger);
   border-color: var(--danger);
+}
+
+.status-pending {
+  color: var(--text);
+  border-color: var(--border);
 }
 
 .detail-list {

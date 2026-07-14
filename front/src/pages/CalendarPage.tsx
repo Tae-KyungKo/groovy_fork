@@ -1,23 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { addPersonalEvent, listCalendarEvents } from "../api/calendars";
+import { addCalendarEvent, listCalendarEvents, listMyStudyOptions } from "../api/calendars";
 import { Modal } from "../components/Modal";
-import type { CalendarEvent } from "../types";
+import type { CalendarEvent, CalendarStudyOption } from "../types";
 import { addMonths, buildMonthGrid, startOfMonth, toDateKey } from "../utils/date";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_VISIBLE_EVENTS = 3;
 
+type ScheduleType = "PERSONAL" | "STUDY";
+
 export function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [studyOptions, setStudyOptions] = useState<CalendarStudyOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
   const [modalDate, setModalDate] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [scheduleType, setScheduleType] = useState<ScheduleType>("PERSONAL");
+  const [studyId, setStudyId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     refresh();
+    listMyStudyOptions().then(setStudyOptions);
   }, []);
 
   function refresh() {
@@ -44,19 +50,28 @@ export function CalendarPage() {
   function openModal(dateKey: string) {
     setModalDate(dateKey);
     setTitle("");
+    setScheduleType("PERSONAL");
+    setStudyId("");
   }
 
   function closeModal() {
     setModalDate(null);
     setTitle("");
+    setScheduleType("PERSONAL");
+    setStudyId("");
   }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!title || !modalDate) return;
+    if (scheduleType === "STUDY" && !studyId) return;
     setSubmitting(true);
     try {
-      await addPersonalEvent({ title, date: modalDate });
+      await addCalendarEvent({
+        title,
+        date: modalDate,
+        studyId: scheduleType === "STUDY" ? studyId : undefined,
+      });
       refresh();
       closeModal();
     } finally {
@@ -133,7 +148,42 @@ export function CalendarPage() {
               제목
               <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
             </label>
-            <button type="submit" disabled={submitting}>
+            <div className="button-row" role="radiogroup" aria-label="일정 종류">
+              <button
+                type="button"
+                className={scheduleType === "PERSONAL" ? undefined : "secondary"}
+                onClick={() => setScheduleType("PERSONAL")}
+              >
+                개인 일정
+              </button>
+              <button
+                type="button"
+                className={scheduleType === "STUDY" ? undefined : "secondary"}
+                onClick={() => setScheduleType("STUDY")}
+                disabled={studyOptions.length === 0}
+              >
+                스터디 약속
+              </button>
+            </div>
+            {scheduleType === "STUDY" &&
+              (studyOptions.length === 0 ? (
+                <p className="hint">약속을 등록할 수 있는 스터디가 없습니다.</p>
+              ) : (
+                <label>
+                  스터디
+                  <select value={studyId} onChange={(e) => setStudyId(e.target.value)} required>
+                    <option value="" disabled>
+                      스터디를 선택하세요
+                    </option>
+                    {studyOptions.map((option) => (
+                      <option key={option.studyId} value={option.studyId}>
+                        {option.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            <button type="submit" disabled={submitting || (scheduleType === "STUDY" && !studyId)}>
               {submitting ? "추가 중..." : "일정 추가"}
             </button>
           </form>

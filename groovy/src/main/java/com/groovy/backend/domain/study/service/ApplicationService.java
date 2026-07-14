@@ -9,6 +9,7 @@ import com.groovy.backend.domain.study.Application;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.study.dto.ApplicationResponse;
+import com.groovy.backend.domain.study.dto.MyApplicationResponse;
 import com.groovy.backend.domain.study.repository.ApplicationRepository;
 import com.groovy.backend.domain.user.User;
 import com.groovy.backend.domain.user.repository.UserRepository;
@@ -25,7 +26,7 @@ public class ApplicationService {
 	private final StudyService studyService;
 
 	@Transactional
-	public Long apply(String email, Long studyId) {
+	public ApplicationResponse apply(String email, Long studyId) {
 		User applicant = getUser(email);
 		Study study = studyService.getStudyEntity(studyId);
 
@@ -47,7 +48,7 @@ public class ApplicationService {
 			.status(ApplicationStatus.PENDING)
 			.build();
 
-		return applicationRepository.save(application).getId();
+		return ApplicationResponse.from(applicationRepository.save(application));
 	}
 
 	@Transactional
@@ -73,7 +74,7 @@ public class ApplicationService {
 	}
 
 	@Transactional
-	public void updateStatus(String email, Long studyId, Long applicationId, ApplicationStatus status) {
+	public ApplicationResponse updateStatus(String email, Long studyId, Long applicationId, ApplicationStatus status) {
 		if (status != ApplicationStatus.APPROVED && status != ApplicationStatus.REJECTED) {
 			throw new IllegalArgumentException("승인 또는 거절 상태만 지정할 수 있습니다.");
 		}
@@ -90,6 +91,16 @@ public class ApplicationService {
 		} else {
 			application.reject();
 		}
+
+		return ApplicationResponse.from(application);
+	}
+
+	// 마이페이지 "참여 중인 스터디 / 신청 내역"용. 상태 무관 내 신청 전체를 반환한다.
+	public List<MyApplicationResponse> getMyApplications(String email) {
+		User user = getUser(email);
+		return applicationRepository.findByApplicantId(user.getId()).stream()
+			.map(MyApplicationResponse::from)
+			.toList();
 	}
 
 	private User getUser(String email) {

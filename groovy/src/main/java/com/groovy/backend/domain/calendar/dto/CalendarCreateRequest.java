@@ -11,6 +11,9 @@ public record CalendarCreateRequest(
 	String title,
 
 	@NotNull(message = "일정 날짜는 필수입니다.")
-	LocalDate date
+	LocalDate date,
+
+	// null이면 개인 일정, 값이 있으면 해당 스터디 멤버 전원과 공유되는 스터디 약속으로 등록된다.
+	Long studyId
 ) {
 }

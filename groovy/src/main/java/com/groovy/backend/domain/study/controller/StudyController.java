@@ -35,7 +35,7 @@ public class StudyController {
 	private final StudyService studyService;
 
 	@PostMapping
-	public ApiResponse<Long> createStudy(
+	public ApiResponse<StudyResponse> createStudy(
 		@AuthenticationPrincipal String email,
 		@Valid @RequestBody StudyCreateRequest request
 	) {
@@ -65,13 +65,12 @@ public class StudyController {
 	}
 
 	@PutMapping("/{studyId}")
-	public ApiResponse<Void> updateStudy(
+	public ApiResponse<StudyResponse> updateStudy(
 		@AuthenticationPrincipal String email,
 		@PathVariable Long studyId,
 		@Valid @RequestBody StudyUpdateRequest request
 	) {
-		studyService.updateStudy(email, studyId, request);
-		return ApiResponse.of("SUCCESS", "스터디 정보가 수정되었습니다.");
+		return ApiResponse.of("SUCCESS", "스터디 정보가 수정되었습니다.", studyService.updateStudy(email, studyId, request));
 	}
 
 	@DeleteMapping("/{studyId}")

@@ -38,7 +38,7 @@ public class StudyService {
 	private final TagService tagService;
 
 	@Transactional
-	public Long createStudy(String leaderEmail, StudyCreateRequest request) {
+	public StudyResponse createStudy(String leaderEmail, StudyCreateRequest request) {
 		User leader = getUser(leaderEmail);
 
 		Study study = Study.builder()
@@ -46,6 +46,7 @@ public class StudyService {
 			.description(request.description())
 			.leader(leader)
 			.capacity(request.capacity())
+			.meetingDays(request.meetingDays())
 			.meetingStartTime(request.meetingStartTime())
 			.meetingEndTime(request.meetingEndTime())
 			.build();
@@ -53,7 +54,8 @@ public class StudyService {
 		Study savedStudy = studyRepository.save(study);
 		tagService.replaceStudyTags(savedStudy, request.tagIds());
 
-		return savedStudy.getId();
+		// 스터디장은 신청 없이 항상 멤버로 집계되므로, 생성 직후 멤버 수는 1명이다.
+		return StudyResponse.from(savedStudy, 1L, request.tagIds());
 	}
 
 	public Page<StudyResponse> getStudies(Pageable pageable) {
@@ -70,6 +72,24 @@ public class StudyService {
 		));
 	}
 
+	// 마이페이지 "내가 만든 스터디" 목록. 내가 방장인 스터디만 조회한다.
+	public List<StudyResponse> getMyStudies(String email) {
+		User user = getUser(email);
+		List<Study> myStudies = studyRepository.findByLeaderId(user.getId());
+		List<Long> studyIds = myStudies.stream().map(Study::getId).toList();
+
+		Map<Long, List<Long>> tagIdsByStudyId = tagService.getStudyTagIdsGroupedByStudyIds(studyIds);
+		Map<Long, Long> approvedMemberCountByStudyId = getApprovedMemberCounts(studyIds);
+
+		return myStudies.stream()
+			.map(study -> StudyResponse.from(
+				study,
+				resolveMemberCount(approvedMemberCountByStudyId, study.getId()),
+				tagIdsByStudyId.getOrDefault(study.getId(), List.of())
+			))
+			.toList();
+	}
+
 	public StudyResponse getStudy(Long studyId) {
 		Study study = getStudyEntity(studyId);
 		long memberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
@@ -79,12 +99,15 @@ public class StudyService {
 	}
 
 	@Transactional
-	public void updateStudy(String email, Long studyId, StudyUpdateRequest request) {
+	public StudyResponse updateStudy(String email, Long studyId, StudyUpdateRequest request) {
 		Study study = getStudyEntity(studyId);
 		validateLeader(study, email);
 
-		study.update(request.title(), request.description(), request.capacity(), request.meetingStartTime(), request.meetingEndTime());
+		study.update(request.title(), request.description(), request.capacity(), request.meetingDays(), request.meetingStartTime(), request.meetingEndTime());
 		tagService.replaceStudyTags(study, request.tagIds());
+
+		long memberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
+		return StudyResponse.from(study, memberCount, request.tagIds());
 	}
 
 	@Transactional
@@ -126,7 +149,7 @@ public class StudyService {
 		double matchScore = targetTagIds.isEmpty() ? 0.0 : matchedCount * 100.0 / targetTagIds.size();
 
 		StudyResponse studyResponse = StudyResponse.from(study, memberCount, studyTagIds);
-		return StudyMatchResponse.of(studyResponse, matchScore);
+		return StudyMatchResponse.of(studyResponse, matchedCount, matchScore);
 	}
 
 	private Map<Long, Long> getApprovedMemberCounts(List<Long> studyIds) {
