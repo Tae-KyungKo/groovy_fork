@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: groovy-backend
+  threads:
+    virtual:
+      enabled: true # Java 21 가상 스레드 조기 활성화
+  datasource:
+    url: ${SPRING_DEV_DB_URL:jdbc:mysql://localhost:3306/groovy_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DEV_DB_USERNAME:root}
+    password: ${SPRING_DEV_DB_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 가상 스레드는 요청마다 캐리어 스레드를 점유하지 않고 반환하므로 동시 요청 수가 급증할 수 있다.
+      # DB 커넥션이 병목이 되지 않도록 풀 사이즈를 넉넉히 확보하고, 고갈 시 무한 대기 대신 빠르게 실패시킨다.
+      pool-name: GroovyHikariPool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:30}
+      minimum-idle: ${DB_POOL_MIN_IDLE:10}
+      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:3000}
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+
+cors:
+  # 프론트 개발 서버(Vite) 기본 포트. 배포 환경 도메인이 추가되면 콤마로 구분해 나열한다.
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
