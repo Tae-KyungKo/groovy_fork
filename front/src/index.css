@@ -392,6 +392,10 @@ button.tag-chip.active {
   color: var(--text);
 }
 
+.tag-actions {
+  margin-top: 12px;
+}
+
 .month-label {
   min-width: 120px;
   text-align: center;

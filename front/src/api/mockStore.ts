@@ -14,7 +14,7 @@ import type {
 
 export const delay = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const STORE_KEY = "groovy_mock_store_v1";
+const STORE_KEY = "groovy_mock_store_v2";
 
 interface StoreShape {
   idCounter: number;
@@ -23,6 +23,7 @@ interface StoreShape {
   applications: Application[];
   waitingList: Record<string, string[]>;
   calendarEvents: CalendarEvent[];
+  myTagPrefs: Record<string, number[]>;
 }
 
 function seed(): StoreShape {
@@ -34,22 +35,26 @@ function seed(): StoreShape {
         id: "s1",
         title: "알고리즘 스터디 3기",
         description: "매주 백준 5문제씩 풀고 리뷰합니다.",
-        ownerId: "u1",
-        ownerName: "데모유저",
+        leaderId: "u1",
+        leaderName: "데모유저",
         capacity: 6,
         memberCount: 3,
-        tagIds: ["t1", "t4"],
+        tagIds: [1, 4],
+        meetingStartTime: "2026-07-15T19:00:00",
+        meetingEndTime: "2026-07-15T21:00:00",
         createdAt: "2026-07-01T00:00:00Z",
       },
       {
         id: "s2",
         title: "프론트엔드 딥다이브",
         description: "React 내부 동작과 렌더링 성능을 공부합니다.",
-        ownerId: "u2",
-        ownerName: "다른유저",
+        leaderId: "u2",
+        leaderName: "다른유저",
         capacity: 5,
         memberCount: 5,
-        tagIds: ["t2"],
+        tagIds: [2],
+        meetingStartTime: "2026-07-16T20:00:00",
+        meetingEndTime: "2026-07-16T22:00:00",
         createdAt: "2026-07-03T00:00:00Z",
       },
     ],
@@ -65,6 +70,7 @@ function seed(): StoreShape {
         type: "STUDY",
       },
     ],
+    myTagPrefs: {},
   };
 }
 
@@ -81,12 +87,12 @@ function load(): StoreShape {
 const store = load();
 
 export const tags: Tag[] = [
-  { id: "t1", name: "알고리즘" },
-  { id: "t2", name: "프론트엔드" },
-  { id: "t3", name: "백엔드" },
-  { id: "t4", name: "면접준비" },
-  { id: "t5", name: "토익" },
-  { id: "t6", name: "독서" },
+  { id: 1, name: "알고리즘" },
+  { id: 2, name: "프론트엔드" },
+  { id: 3, name: "백엔드" },
+  { id: 4, name: "면접준비" },
+  { id: 5, name: "토익" },
+  { id: 6, name: "독서" },
 ];
 
 export const users = store.users;
@@ -106,6 +112,7 @@ export function persist() {
       applications,
       waitingList,
       calendarEvents,
+      myTagPrefs: store.myTagPrefs,
     } satisfies StoreShape),
   );
 }
@@ -114,6 +121,14 @@ export function nextId() {
   const id = String(store.idCounter++);
   persist();
   return id;
+}
+
+export function getMyTagIds(userId: string): number[] {
+  return store.myTagPrefs[userId] ?? [];
+}
+
+export function setMyTagIds(userId: string, tagIds: number[]) {
+  store.myTagPrefs[userId] = tagIds;
 }
 
 const SESSION_KEY = "groovy_mock_session_user_id";

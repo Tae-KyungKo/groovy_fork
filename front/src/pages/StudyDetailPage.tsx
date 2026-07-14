@@ -20,7 +20,7 @@ export function StudyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const isOwner = user && study && user.id === study.ownerId;
+  const isOwner = user && study && user.id === study.leaderId;
   const isFull = study ? study.memberCount >= study.capacity : false;
 
   useEffect(() => {
@@ -105,7 +105,11 @@ export function StudyDetailPage() {
           ))}
         </div>
         <p className="capacity">
-          정원 {study.memberCount} / {study.capacity}명 · 스터디장 {study.ownerName}
+          정원 {study.memberCount} / {study.capacity}명 · 스터디장 {study.leaderName}
+        </p>
+        <p className="hint">
+          {new Date(study.meetingStartTime).toLocaleString()} ~{" "}
+          {new Date(study.meetingEndTime).toLocaleString()}
         </p>
 
         {!isOwner && user && (

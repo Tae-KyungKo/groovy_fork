@@ -1,6 +1,7 @@
 import type { User } from "../types";
 import { apiFetch, USE_MOCK } from "./client";
 import { delay, nextId, persist, setCurrentUserId, users, requireUser } from "./mockStore";
+import { clearToken, setToken } from "./tokenStore";
 
 export interface SignupPayload {
   email: string;
@@ -42,10 +43,12 @@ export async function login(payload: LoginPayload): Promise<User> {
     void _password;
     return rest;
   }
-  return apiFetch<User>("/api/auth/login", {
+  const { accessToken } = await apiFetch<{ accessToken: string }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  setToken(accessToken);
+  return me();
 }
 
 export async function logout(): Promise<void> {
@@ -54,7 +57,8 @@ export async function logout(): Promise<void> {
     setCurrentUserId(null);
     return;
   }
-  return apiFetch<void>("/api/auth/logout", { method: "POST" });
+  await apiFetch<void>("/api/auth/logout", { method: "POST" });
+  clearToken();
 }
 
 export async function me(): Promise<User> {

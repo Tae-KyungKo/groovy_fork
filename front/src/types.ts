@@ -5,7 +5,7 @@ export interface User {
 }
 
 export interface Tag {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -24,16 +24,28 @@ export interface Study {
   id: string;
   title: string;
   description: string;
-  ownerId: string;
-  ownerName: string;
+  leaderId: string;
+  leaderName: string;
   capacity: number;
   memberCount: number;
-  tagIds: string[];
+  tagIds: number[];
+  meetingStartTime: string;
+  meetingEndTime: string;
   createdAt: string;
 }
 
-export interface StudyMatch extends Study {
+export interface StudyMatch {
+  study: Study;
+  matchedTagCount: number;
   matchScore: number;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  number: number;
+  totalPages: number;
+  totalElements: number;
+  size: number;
 }
 
 export interface WaitingPosition {
