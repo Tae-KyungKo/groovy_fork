@@ -79,6 +79,12 @@ public class TagService {
 			.toList();
 	}
 
+	public List<Long> getStudyTagIds(Long studyId) {
+		return studyTagRepository.findByStudyId(studyId).stream()
+			.map(studyTag -> studyTag.getTag().getId())
+			.toList();
+	}
+
 	public Map<Long, List<Long>> getStudyTagIdsGroupedByStudyIds(List<Long> studyIds) {
 		if (studyIds.isEmpty()) {
 			return Map.of();

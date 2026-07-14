@@ -36,6 +36,11 @@ public class ApplicationService {
 			throw new IllegalArgumentException("이미 참여 신청한 스터디입니다.");
 		}
 
+		long currentMemberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
+		if (currentMemberCount >= study.getCapacity()) {
+			throw new IllegalArgumentException("정원이 마감된 스터디입니다.");
+		}
+
 		Application application = Application.builder()
 			.study(study)
 			.applicant(applicant)

@@ -32,4 +32,11 @@ public class AuthController {
 		LoginResponse response = userService.login(request);
 		return ApiResponse.of("SUCCESS", "로그인에 성공했습니다.", response);
 	}
+
+	// 인증은 무상태 JWT로 처리되어 서버에 무효화할 세션/토큰이 없으므로,
+	// SecurityConfig의 기본 인증 요구사항으로 유효한 토큰 보유만 확인하고 실제 폐기는 클라이언트가 토큰을 버리는 것으로 완료된다.
+	@PostMapping("/logout")
+	public ApiResponse<Void> logout() {
+		return ApiResponse.of("SUCCESS", "로그아웃되었습니다.");
+	}
 }

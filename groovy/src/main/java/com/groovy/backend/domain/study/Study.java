@@ -39,6 +39,9 @@ public class Study extends BaseTimeEntity {
 	@JoinColumn(name = "leader_id", nullable = false)
 	private User leader;
 
+	@Column(nullable = false)
+	private Integer capacity;
+
 	// 스터디 공식 일정(캘린더 통합 조회용). 아직 별도 일정 도메인이 없어 임시로 Study에 보관한다.
 	@Column
 	private LocalDateTime meetingStartTime;
@@ -47,17 +50,19 @@ public class Study extends BaseTimeEntity {
 	private LocalDateTime meetingEndTime;
 
 	@Builder
-	public Study(String title, String description, User leader, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
+	public Study(String title, String description, User leader, Integer capacity, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
 		this.leader = leader;
+		this.capacity = capacity;
 		this.meetingStartTime = meetingStartTime;
 		this.meetingEndTime = meetingEndTime;
 	}
 
-	public void update(String title, String description, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
+	public void update(String title, String description, Integer capacity, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
+		this.capacity = capacity;
 		this.meetingStartTime = meetingStartTime;
 		this.meetingEndTime = meetingEndTime;
 	}
