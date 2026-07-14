@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.groovy.backend.common.response.ApiResponse;
 import com.groovy.backend.domain.calendar.dto.CalendarCreateRequest;
-import com.groovy.backend.domain.calendar.dto.IntegrationCalendarResponse;
+import com.groovy.backend.domain.calendar.dto.CalendarEventResponse;
 import com.groovy.backend.domain.calendar.service.CalendarService;
 
 import jakarta.validation.Valid;
@@ -25,12 +25,12 @@ public class CalendarController {
 	private final CalendarService calendarService;
 
 	@GetMapping
-	public ApiResponse<List<IntegrationCalendarResponse>> getCalendars(@AuthenticationPrincipal String email) {
+	public ApiResponse<List<CalendarEventResponse>> getCalendars(@AuthenticationPrincipal String email) {
 		return ApiResponse.of("SUCCESS", "통합 일정 조회에 성공했습니다.", calendarService.getIntegratedCalendar(email));
 	}
 
 	@PostMapping
-	public ApiResponse<Long> addCalendar(
+	public ApiResponse<CalendarEventResponse> addCalendar(
 		@AuthenticationPrincipal String email,
 		@Valid @RequestBody CalendarCreateRequest request
 	) {

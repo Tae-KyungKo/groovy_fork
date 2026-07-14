@@ -1,6 +1,6 @@
 package com.groovy.backend.domain.calendar;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.groovy.backend.common.entity.BaseTimeEntity;
 import com.groovy.backend.domain.user.User;
@@ -36,21 +36,14 @@ public class Calendar extends BaseTimeEntity {
 	@Column(nullable = false)
 	private String title;
 
-	@Column(columnDefinition = "TEXT")
-	private String description;
-
+	// 캘린더 UI가 날짜 단위 그리드(월간 뷰)로만 일정을 다루므로 시간 없이 날짜만 저장한다.
 	@Column(nullable = false)
-	private LocalDateTime startTime;
-
-	@Column(nullable = false)
-	private LocalDateTime endTime;
+	private LocalDate date;
 
 	@Builder
-	public Calendar(User user, String title, String description, LocalDateTime startTime, LocalDateTime endTime) {
+	public Calendar(User user, String title, LocalDate date) {
 		this.user = user;
 		this.title = title;
-		this.description = description;
-		this.startTime = startTime;
-		this.endTime = endTime;
+		this.date = date;
 	}
 }
