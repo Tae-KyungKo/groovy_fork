@@ -10,7 +10,8 @@ import com.groovy.backend.domain.calendar.CalendarSourceType;
 public record CalendarEventResponse(
 	String id,
 	String title,
-	String date,
+	String startDate,
+	String endDate,
 	String studyId,
 	String studyTitle,
 	CalendarSourceType type
@@ -21,7 +22,8 @@ public record CalendarEventResponse(
 			return new CalendarEventResponse(
 				"personal-" + calendar.getId(),
 				calendar.getTitle(),
-				calendar.getDate().toString(),
+				calendar.getStartDate().toString(),
+				calendar.getEndDate().toString(),
 				null,
 				null,
 				CalendarSourceType.PERSONAL
@@ -32,7 +34,8 @@ public record CalendarEventResponse(
 		return new CalendarEventResponse(
 			"study-" + calendar.getId(),
 			calendar.getTitle(),
-			calendar.getDate().toString(),
+			calendar.getStartDate().toString(),
+			calendar.getEndDate().toString(),
 			studyId,
 			calendar.getStudy().getTitle(),
 			CalendarSourceType.STUDY

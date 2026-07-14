@@ -1,5 +1,6 @@
 package com.groovy.backend.domain.calendar.service;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,11 +40,18 @@ public class CalendarService {
 		User user = getUser(email);
 		Study study = resolveStudyIfPresent(user, request.studyId());
 
+		LocalDate startDate = request.startDate();
+		LocalDate endDate = request.endDate() != null ? request.endDate() : startDate;
+		if (endDate.isBefore(startDate)) {
+			throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
+		}
+
 		Calendar calendar = Calendar.builder()
 			.user(user)
 			.study(study)
 			.title(request.title())
-			.date(request.date())
+			.startDate(startDate)
+			.endDate(endDate)
 			.build();
 
 		return CalendarEventResponse.from(calendarRepository.save(calendar));
@@ -65,7 +73,7 @@ public class CalendarService {
 
 		return Stream.concat(personalSchedules.stream(), studySchedules.stream())
 			.map(CalendarEventResponse::from)
-			.sorted(Comparator.comparing(CalendarEventResponse::date))
+			.sorted(Comparator.comparing(CalendarEventResponse::startDate))
 			.toList();
 	}
 
