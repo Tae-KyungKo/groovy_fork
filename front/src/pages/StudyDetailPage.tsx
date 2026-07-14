@@ -5,6 +5,7 @@ import { listTags } from "../api/tags";
 import { getWaitingPosition, joinWaiting, leaveWaiting } from "../api/waiting";
 import { useAuth } from "../context/AuthContext";
 import type { Study, Tag, WaitingPosition } from "../types";
+import { DAY_LABELS } from "../types";
 
 type ApplyState = "NONE" | "PENDING";
 
@@ -108,8 +109,8 @@ export function StudyDetailPage() {
           정원 {study.memberCount} / {study.capacity}명 · 스터디장 {study.leaderName}
         </p>
         <p className="hint">
-          {new Date(study.meetingStartTime).toLocaleString()} ~{" "}
-          {new Date(study.meetingEndTime).toLocaleString()}
+          {study.meetingDays.map((day) => DAY_LABELS[day]).join(", ")} {study.meetingStartTime} ~{" "}
+          {study.meetingEndTime}
         </p>
 
         {!isOwner && user && (

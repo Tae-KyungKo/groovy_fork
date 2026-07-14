@@ -1,4 +1,4 @@
-import type { Application, ApplicationStatus, PageResponse, Study } from "../types";
+import type { Application, ApplicationStatus, DayOfWeek, PageResponse, Study } from "../types";
 import { apiFetch, USE_MOCK } from "./client";
 import { applications, delay, nextId, persist, requireUser, studies } from "./mockStore";
 
@@ -7,6 +7,7 @@ export interface StudyPayload {
   description: string;
   capacity: number;
   tagIds: number[];
+  meetingDays: DayOfWeek[];
   meetingStartTime: string;
   meetingEndTime: string;
 }
@@ -56,6 +57,7 @@ export async function createStudy(payload: StudyPayload): Promise<Study> {
       description: payload.description,
       capacity: payload.capacity,
       tagIds: payload.tagIds,
+      meetingDays: payload.meetingDays,
       meetingStartTime: payload.meetingStartTime,
       meetingEndTime: payload.meetingEndTime,
       leaderId: user.id,

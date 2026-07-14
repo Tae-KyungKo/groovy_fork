@@ -4,7 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createStudy, getStudy, updateStudy } from "../api/studies";
 import { listTags } from "../api/tags";
 import { TagPicker } from "../components/TagPicker";
-import type { Tag } from "../types";
+import type { DayOfWeek, Tag } from "../types";
+import { DAY_LABELS, DAYS_OF_WEEK } from "../types";
 
 export function StudyFormPage() {
   const { studyId } = useParams();
@@ -16,6 +17,7 @@ export function StudyFormPage() {
   const [description, setDescription] = useState("");
   const [capacity, setCapacity] = useState(4);
   const [tagIds, setTagIds] = useState<number[]>([]);
+  const [meetingDays, setMeetingDays] = useState<DayOfWeek[]>([]);
   const [meetingStartTime, setMeetingStartTime] = useState("");
   const [meetingEndTime, setMeetingEndTime] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +35,9 @@ export function StudyFormPage() {
       setDescription(study.description);
       setCapacity(study.capacity);
       setTagIds(study.tagIds);
-      setMeetingStartTime(study.meetingStartTime.slice(0, 16));
-      setMeetingEndTime(study.meetingEndTime.slice(0, 16));
+      setMeetingDays(study.meetingDays);
+      setMeetingStartTime(study.meetingStartTime);
+      setMeetingEndTime(study.meetingEndTime);
       setLoading(false);
     });
   }, [studyId]);
@@ -45,12 +48,26 @@ export function StudyFormPage() {
     );
   }
 
+  function toggleDay(day: DayOfWeek) {
+    setMeetingDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      const payload = { title, description, capacity, tagIds, meetingStartTime, meetingEndTime };
+      const payload = {
+        title,
+        description,
+        capacity,
+        tagIds,
+        meetingDays,
+        meetingStartTime,
+        meetingEndTime,
+      };
       const study = isEdit && studyId
         ? await updateStudy(studyId, payload)
         : await createStudy(payload);
@@ -92,9 +109,24 @@ export function StudyFormPage() {
           />
         </label>
         <label>
+          모임 요일
+          <div className="tag-picker">
+            {DAYS_OF_WEEK.map((day) => (
+              <button
+                key={day}
+                type="button"
+                className={`tag-chip${meetingDays.includes(day) ? " active" : ""}`}
+                onClick={() => toggleDay(day)}
+              >
+                {DAY_LABELS[day]}
+              </button>
+            ))}
+          </div>
+        </label>
+        <label>
           시작 시각
           <input
-            type="datetime-local"
+            type="time"
             value={meetingStartTime}
             onChange={(e) => setMeetingStartTime(e.target.value)}
             required
@@ -103,7 +135,7 @@ export function StudyFormPage() {
         <label>
           종료 시각
           <input
-            type="datetime-local"
+            type="time"
             value={meetingEndTime}
             onChange={(e) => setMeetingEndTime(e.target.value)}
             required
