@@ -26,7 +26,7 @@ public class UserService {
 	private final TokenProvider tokenProvider;
 
 	@Transactional
-	public void signup(SignupRequest request) {
+	public UserResponse signup(SignupRequest request) {
 		if (userRepository.existsByEmail(request.email())) {
 			throw new IllegalArgumentException("이미 가입된 이메일입니다.");
 		}
@@ -39,7 +39,7 @@ public class UserService {
 			.roleType(RoleType.USER)
 			.build();
 
-		userRepository.save(user);
+		return UserResponse.from(userRepository.save(user));
 	}
 
 	public LoginResponse login(LoginRequest request) {

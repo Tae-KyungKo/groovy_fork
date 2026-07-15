@@ -8,5 +8,7 @@ import com.groovy.backend.domain.calendar.Calendar;
 
 public interface CalendarRepository extends JpaRepository<Calendar, Long> {
 
-	List<Calendar> findByUserId(Long userId);
+	List<Calendar> findByUserIdAndStudyIsNull(Long userId);
+
+	List<Calendar> findByStudyIdIn(List<Long> studyIds);
 }

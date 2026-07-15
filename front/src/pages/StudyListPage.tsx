@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listStudies } from "../api/studies";
-import { listTags, matchStudies, saveMyTags } from "../api/tags";
+import { listMyTagIds, listTags, matchStudies, saveMyTags } from "../api/tags";
 import { StudyCard } from "../components/StudyCard";
 import { TagPicker } from "../components/TagPicker";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +21,11 @@ export function StudyListPage() {
   useEffect(() => {
     listTags().then(setTags);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    listMyTagIds().then(setSelectedTagIds);
+  }, [user]);
 
   useEffect(() => {
     setLoading(true);
@@ -50,6 +55,16 @@ export function StudyListPage() {
     }
   }
 
+  async function handlePreviewMatches() {
+    setMatching(true);
+    try {
+      const result = await matchStudies(selectedTagIds);
+      setMatches(result);
+    } finally {
+      setMatching(false);
+    }
+  }
+
   function clearMatches() {
     setMatches(null);
     setSelectedTagIds([]);
@@ -73,6 +88,14 @@ export function StudyListPage() {
           <div className="button-row tag-actions">
             <button type="button" onClick={handleShowMatches} disabled={matching || selectedTagIds.length === 0}>
               {matching ? "매칭 중..." : "태그 저장하고 매칭 보기"}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={handlePreviewMatches}
+              disabled={matching || selectedTagIds.length === 0}
+            >
+              {matching ? "매칭 중..." : "저장 없이 미리보기"}
             </button>
             {matches && (
               <button type="button" className="secondary" onClick={clearMatches}>

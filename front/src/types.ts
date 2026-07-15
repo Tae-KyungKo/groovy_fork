@@ -32,6 +32,15 @@ export interface Application {
   appliedAt: string;
 }
 
+// 마이페이지 "참여 중인 스터디 / 신청 내역"용. 내가 신청한 스터디 정보를 스터디명과 함께 보여준다.
+export interface MyApplication {
+  id: string;
+  studyId: string;
+  studyTitle: string;
+  status: ApplicationStatus;
+  appliedAt: string;
+}
+
 export interface Study {
   id: string;
   title: string;
@@ -42,7 +51,6 @@ export interface Study {
   memberCount: number;
   tagIds: number[];
   // 요일 반복 일정: meetingDays(요일 목록) + meetingStartTime/meetingEndTime("HH:mm").
-  // 백엔드는 아직 LocalDateTime 필드만 있어 요일 개념이 없음 (프론트 우선 반영, 백엔드 연동은 별도 작업).
   meetingDays: DayOfWeek[];
   meetingStartTime: string;
   meetingEndTime: string;
@@ -71,10 +79,17 @@ export interface WaitingPosition {
 export interface CalendarEvent {
   id: string;
   title: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   studyId?: string;
   studyTitle?: string;
   type: "PERSONAL" | "STUDY";
+}
+
+// 캘린더에서 "스터디 약속" 등록 시 고를 수 있는, 내가 속한(방장이거나 승인된) 스터디 목록.
+export interface CalendarStudyOption {
+  studyId: string;
+  title: string;
 }
 
 export interface AppNotification {

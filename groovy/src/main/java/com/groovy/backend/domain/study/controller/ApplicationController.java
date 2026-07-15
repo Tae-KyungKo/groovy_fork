@@ -28,7 +28,7 @@ public class ApplicationController {
 	private final ApplicationService applicationService;
 
 	@PostMapping
-	public ApiResponse<Long> apply(@AuthenticationPrincipal String email, @PathVariable Long studyId) {
+	public ApiResponse<ApplicationResponse> apply(@AuthenticationPrincipal String email, @PathVariable Long studyId) {
 		return ApiResponse.of("SUCCESS", "참여 신청이 완료되었습니다.", applicationService.apply(email, studyId));
 	}
 
@@ -47,13 +47,12 @@ public class ApplicationController {
 	}
 
 	@PatchMapping("/{applicationId}")
-	public ApiResponse<Void> updateStatus(
+	public ApiResponse<ApplicationResponse> updateStatus(
 		@AuthenticationPrincipal String email,
 		@PathVariable Long studyId,
 		@PathVariable Long applicationId,
 		@Valid @RequestBody ApplicationStatusUpdateRequest request
 	) {
-		applicationService.updateStatus(email, studyId, applicationId, request.status());
-		return ApiResponse.of("SUCCESS", "신청 상태가 변경되었습니다.");
+		return ApiResponse.of("SUCCESS", "신청 상태가 변경되었습니다.", applicationService.updateStatus(email, studyId, applicationId, request.status()));
 	}
 }

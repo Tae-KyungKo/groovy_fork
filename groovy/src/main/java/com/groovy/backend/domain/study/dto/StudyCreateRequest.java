@@ -1,7 +1,10 @@
 package com.groovy.backend.domain.study.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
+
+import com.groovy.backend.domain.study.MeetingDay;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -19,14 +22,17 @@ public record StudyCreateRequest(
 	@Min(value = 1, message = "정원은 1명 이상이어야 합니다.")
 	Integer capacity,
 
-	LocalDateTime meetingStartTime,
+	Set<MeetingDay> meetingDays,
 
-	LocalDateTime meetingEndTime,
+	LocalTime meetingStartTime,
+
+	LocalTime meetingEndTime,
 
 	List<Long> tagIds
 ) {
 
 	public StudyCreateRequest {
+		meetingDays = meetingDays == null ? Set.of() : meetingDays;
 		tagIds = tagIds == null ? List.of() : tagIds;
 	}
 }

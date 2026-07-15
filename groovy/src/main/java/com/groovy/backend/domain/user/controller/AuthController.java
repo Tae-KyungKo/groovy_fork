@@ -9,6 +9,7 @@ import com.groovy.backend.common.response.ApiResponse;
 import com.groovy.backend.domain.user.dto.LoginRequest;
 import com.groovy.backend.domain.user.dto.LoginResponse;
 import com.groovy.backend.domain.user.dto.SignupRequest;
+import com.groovy.backend.domain.user.dto.UserResponse;
 import com.groovy.backend.domain.user.service.UserService;
 
 import jakarta.validation.Valid;
@@ -22,9 +23,8 @@ public class AuthController {
 	private final UserService userService;
 
 	@PostMapping("/signup")
-	public ApiResponse<Void> signup(@Valid @RequestBody SignupRequest request) {
-		userService.signup(request);
-		return ApiResponse.of("SUCCESS", "회원가입이 완료되었습니다.");
+	public ApiResponse<UserResponse> signup(@Valid @RequestBody SignupRequest request) {
+		return ApiResponse.of("SUCCESS", "회원가입이 완료되었습니다.", userService.signup(request));
 	}
 
 	@PostMapping("/login")

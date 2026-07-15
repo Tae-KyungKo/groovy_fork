@@ -5,21 +5,20 @@ import java.time.LocalDateTime;
 import com.groovy.backend.domain.study.Application;
 import com.groovy.backend.domain.study.ApplicationStatus;
 
-public record ApplicationResponse(
+// 마이페이지에서 내가 신청한 스터디 전체(대기/승인/거절)를 스터디명과 함께 한 번에 보여주기 위한 응답 DTO.
+public record MyApplicationResponse(
 	String id,
 	String studyId,
-	String userId,
-	String userName,
+	String studyTitle,
 	ApplicationStatus status,
 	LocalDateTime appliedAt
 ) {
 
-	public static ApplicationResponse from(Application application) {
-		return new ApplicationResponse(
+	public static MyApplicationResponse from(Application application) {
+		return new MyApplicationResponse(
 			String.valueOf(application.getId()),
 			String.valueOf(application.getStudy().getId()),
-			String.valueOf(application.getApplicant().getId()),
-			application.getApplicant().getName(),
+			application.getStudy().getTitle(),
 			application.getStatus(),
 			application.getCreatedAt()
 		);
