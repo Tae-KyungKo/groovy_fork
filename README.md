@@ -5,6 +5,29 @@ KT Cloud native: Team 이륙의 Groovy 프로젝트 레포지토리.
 - 자바 버전: 21
 - 스프링부트 버전: 4.1.0
 
+## 🐳 로컬 실행 (Docker Compose)
+
+frontend / backend / mysql을 루트의 통합 `docker-compose.local.yml` 하나로 빌드·실행합니다. `front/`, `groovy/` 디렉토리에는 각 서비스의 `Dockerfile`만 존재하며, docker-compose 파일과 환경변수 파일은 루트에만 둡니다.
+
+```bash
+# 1. 환경변수 파일 준비
+.env.local
+# .env.local 값 확인/수정 (MYSQL_ROOT_PASSWORD, JWT_SECRET_KEY 등)
+
+# 2. 빌드
+docker compose -f docker-compose.local.yml --env-file .env.local build
+
+# 3. 기동
+docker compose -f docker-compose.local.yml --env-file .env.local up -d
+
+# 종료
+docker compose -f docker-compose.local.yml --env-file .env.local down
+
+# 코드 수정 후 반영해서 실행:
+docker compose -f docker-compose.local.yml --env-file .env.local up -d --build
+```
+
+
 # 📊 Git Collaboration Guide
 
 이 가이드는 프로젝트의 일관된 코드 관리와 원활한 협업을 위한 **브랜치 네이밍, 커밋 메시지 규칙 및 깃플로우(Git Flow) 전략**을 정의한 문서입니다. 팀원 모두가 동일한 규칙을 준수하여 생산성을 높일 수 있도록 적극 동참해 주시기 바랍니다.
