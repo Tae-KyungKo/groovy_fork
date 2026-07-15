@@ -1,0 +1,27 @@
+.gradle
+build
+out
+.idea
+*.iml
+HELP.md
+
+# 환경변수 / 시크릿
+.env
+.env.*
+!.env.example
+!.env.local.example
+*.pem
+*.key
+
+# VCS
+.git
+.gitignore
+
+# 로그 / OS
+*.log
+.DS_Store
+
+# Docker 관련 파일 자체는 이미지에 불필요
+Dockerfile
+docker-compose*.yml
+.dockerignore
