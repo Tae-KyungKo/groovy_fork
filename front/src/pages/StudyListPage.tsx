@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listStudies } from "../api/studies";
-import { listTags, matchStudies } from "../api/tags";
+import { listMyTagIds, listTags, matchStudies, saveMyTags } from "../api/tags";
 import { StudyCard } from "../components/StudyCard";
 import { TagPicker } from "../components/TagPicker";
 import { useAuth } from "../context/AuthContext";
@@ -10,36 +10,65 @@ import type { Study, StudyMatch, Tag } from "../types";
 export function StudyListPage() {
   const { user } = useAuth();
   const [studies, setStudies] = useState<Study[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [matches, setMatches] = useState<StudyMatch[] | null>(null);
+  const [matching, setMatching] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([listStudies(), listTags()]).then(([studyList, tagList]) => {
-      setStudies(studyList);
-      setTags(tagList);
-      setLoading(false);
-    });
+    listTags().then(setTags);
   }, []);
 
   useEffect(() => {
-    if (selectedTagIds.length === 0) {
-      setMatches(null);
-      return;
-    }
-    matchStudies(selectedTagIds).then(setMatches);
-  }, [selectedTagIds]);
+    if (!user) return;
+    listMyTagIds().then(setSelectedTagIds);
+  }, [user]);
+
+  useEffect(() => {
+    setLoading(true);
+    listStudies(page).then((result) => {
+      setStudies(result.studies);
+      setTotalPages(result.totalPages);
+      setLoading(false);
+    });
+  }, [page]);
 
   const tagsById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
-  function toggleTag(tagId: string) {
+  function toggleTag(tagId: number) {
     setSelectedTagIds((prev) =>
       prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
     );
   }
 
-  const displayList = matches ?? studies;
+  async function handleShowMatches() {
+    setMatching(true);
+    try {
+      await saveMyTags(selectedTagIds);
+      const result = await matchStudies();
+      setMatches(result);
+    } finally {
+      setMatching(false);
+    }
+  }
+
+  async function handlePreviewMatches() {
+    setMatching(true);
+    try {
+      const result = await matchStudies(selectedTagIds);
+      setMatches(result);
+    } finally {
+      setMatching(false);
+    }
+  }
+
+  function clearMatches() {
+    setMatches(null);
+    setSelectedTagIds([]);
+  }
 
   return (
     <div className="page">
@@ -52,25 +81,68 @@ export function StudyListPage() {
         )}
       </div>
 
-      <div className="card">
-        <p className="hint">태그를 선택하면 매칭도 순으로 정렬됩니다.</p>
-        <TagPicker tags={tags} selected={selectedTagIds} onToggle={toggleTag} />
-      </div>
+      {user && (
+        <div className="card">
+          <p className="hint">선호 태그를 선택하고 저장하면 매칭도 순으로 볼 수 있습니다.</p>
+          <TagPicker tags={tags} selected={selectedTagIds} onToggle={toggleTag} />
+          <div className="button-row tag-actions">
+            <button type="button" onClick={handleShowMatches} disabled={matching || selectedTagIds.length === 0}>
+              {matching ? "매칭 중..." : "태그 저장하고 매칭 보기"}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={handlePreviewMatches}
+              disabled={matching || selectedTagIds.length === 0}
+            >
+              {matching ? "매칭 중..." : "저장 없이 미리보기"}
+            </button>
+            {matches && (
+              <button type="button" className="secondary" onClick={clearMatches}>
+                매칭 해제
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p className="page-loading">불러오는 중...</p>
-      ) : (
+      ) : matches ? (
         <div className="study-grid">
-          {displayList.map((study) => (
+          {matches.map((match) => (
             <StudyCard
-              key={study.id}
-              study={study}
+              key={match.study.id}
+              study={match.study}
               tagsById={tagsById}
-              matchScore={"matchScore" in study ? (study as StudyMatch).matchScore : undefined}
+              matchScore={match.matchScore}
             />
           ))}
-          {displayList.length === 0 && <p className="empty">스터디가 없습니다.</p>}
+          {matches.length === 0 && <p className="empty">매칭된 스터디가 없습니다.</p>}
         </div>
+      ) : (
+        <>
+          <div className="study-grid">
+            {studies.map((study) => (
+              <StudyCard key={study.id} study={study} tagsById={tagsById} />
+            ))}
+            {studies.length === 0 && <p className="empty">스터디가 없습니다.</p>}
+          </div>
+          {totalPages > 1 && (
+            <div className="button-row">
+              {Array.from({ length: totalPages }, (_, i) => i).map((pageIndex) => (
+                <button
+                  key={pageIndex}
+                  type="button"
+                  className={pageIndex === page ? undefined : "secondary"}
+                  onClick={() => setPage(pageIndex)}
+                >
+                  {pageIndex + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

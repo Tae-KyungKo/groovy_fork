@@ -10,6 +10,7 @@ lerna-debug.log*
 .agents/*
 .dockerignore
 .env.example
+README.md
 
 node_modules
 dist

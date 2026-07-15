@@ -6,6 +6,8 @@
   --border: #e5e7eb;
   --accent: #7c3aed;
   --accent-contrast: #ffffff;
+  --study-accent: #16a34a;
+  --study-accent-contrast: #ffffff;
   --danger: #dc2626;
   --sans: system-ui, "Segoe UI", Roboto, sans-serif;
 
@@ -24,6 +26,8 @@
     --border: #2e303a;
     --accent: #a78bfa;
     --accent-contrast: #14151a;
+    --study-accent: #4ade80;
+    --study-accent-contrast: #0b1a10;
   }
 }
 
@@ -153,6 +157,7 @@ a {
 }
 
 .form input,
+.form select,
 .form textarea {
   font: inherit;
   padding: 8px 10px;
@@ -311,6 +316,11 @@ button.tag-chip.active {
   border-color: var(--danger);
 }
 
+.status-pending {
+  color: var(--text);
+  border-color: var(--border);
+}
+
 .detail-list {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -392,6 +402,10 @@ button.tag-chip.active {
   color: var(--text);
 }
 
+.tag-actions {
+  margin-top: 12px;
+}
+
 .month-label {
   min-width: 120px;
   text-align: center;
@@ -436,6 +450,7 @@ button.tag-chip.active {
   align-items: stretch;
   gap: 4px;
   text-align: left;
+  transition: background-color 120ms ease;
 }
 
 .calendar-cell:hover {
@@ -459,31 +474,86 @@ button.tag-chip.active {
 .calendar-cell-events {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
+/* 하루짜리 일정: 앱 전체에서 태그/상태 배지에 쓰는 알약(pill) 모양(border-radius: 999px)과
+   같은 어휘를 재사용해, 여러 날 일정(막대)과 형태만으로도 뚜렷이 구분되게 한다. */
 .calendar-event {
   font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border-left: 3px solid var(--accent);
-  background: var(--accent-bg, var(--bg-muted));
+  line-height: 16px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--bg-muted);
+  color: var(--text-h);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .calendar-event-study {
-  border-left-color: #16a34a;
+  border-color: color-mix(in srgb, var(--study-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--study-accent) 16%, var(--bg-muted));
 }
 
 .calendar-event-personal {
-  border-left-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg-muted));
+}
+
+/* 이 칸에는 일정이 없지만 같은 주의 다른 날에는 걸쳐 있는 레인의 빈 자리.
+   보이지는 않되 높이는 그대로 차지해 옆 칸의 막대와 줄을 맞춘다. */
+.calendar-event-placeholder {
+  visibility: hidden;
+  border-color: transparent;
+  background: transparent;
+}
+
+/* 시작일과 종료일이 다른(여러 날에 걸친) 일정. 하루짜리 일정의 옅은 알약 모양과 뚜렷이
+   구분되도록 진한 색으로 꽉 채운 막대로 그린다. 달력이 주 단위로 줄바꿈되는 그리드라
+   한 주 행마다 구간을 이어붙여야 하는데, 칸과 칸 사이에는 그리드 구분선(1px)이 있어서
+   막대를 칸 안쪽 여백(padding)만큼만 늘리면 그 구분선이 막대 위에 고스란히 남아 끊겨
+   보인다. 구분선 두께(1px)까지 더 늘려 뒤 칸(DOM에서 나중에 그려져 위에 쌓이는 칸)의
+   막대가 앞 칸의 테두리선을 덮어 지우도록 해서, 실제로 하나로 이어진 수평선처럼 보이게
+   한다. */
+.calendar-event-range {
+  border: none;
+  border-radius: 0;
+  margin: 0 -7px;
+  padding: 2px 5px;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.calendar-event-range.calendar-event-study {
+  color: var(--study-accent-contrast);
+  background: var(--study-accent);
+}
+
+.calendar-event-range.seg-start {
+  margin-left: 0;
+  padding-left: 8px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.calendar-event-range.seg-end {
+  margin-right: 0;
+  padding-right: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .calendar-event-more {
+  align-self: flex-start;
   font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
   color: var(--text);
+  background: var(--bg-muted);
 }
 
 .modal-backdrop {

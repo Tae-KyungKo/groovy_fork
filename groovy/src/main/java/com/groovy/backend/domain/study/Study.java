@@ -1,12 +1,18 @@
 package com.groovy.backend.domain.study;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.groovy.backend.common.entity.BaseTimeEntity;
 import com.groovy.backend.domain.user.User;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -42,27 +48,38 @@ public class Study extends BaseTimeEntity {
 	@Column(nullable = false)
 	private Integer capacity;
 
-	// 스터디 공식 일정(캘린더 통합 조회용). 아직 별도 일정 도메인이 없어 임시로 Study에 보관한다.
-	@Column
-	private LocalDateTime meetingStartTime;
+	// 요일 반복 일정: 프론트가 <input type="time">으로 다루는 시:분만 저장하므로 날짜 없는 LocalTime을 쓴다.
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "study_meeting_days", joinColumns = @JoinColumn(name = "study_id"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "day_of_week", nullable = false)
+	private Set<MeetingDay> meetingDays = new LinkedHashSet<>();
 
 	@Column
-	private LocalDateTime meetingEndTime;
+	private LocalTime meetingStartTime;
+
+	@Column
+	private LocalTime meetingEndTime;
 
 	@Builder
-	public Study(String title, String description, User leader, Integer capacity, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
+	public Study(String title, String description, User leader, Integer capacity, Set<MeetingDay> meetingDays, LocalTime meetingStartTime, LocalTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
 		this.leader = leader;
 		this.capacity = capacity;
+		this.meetingDays = meetingDays != null ? new LinkedHashSet<>(meetingDays) : new LinkedHashSet<>();
 		this.meetingStartTime = meetingStartTime;
 		this.meetingEndTime = meetingEndTime;
 	}
 
-	public void update(String title, String description, Integer capacity, LocalDateTime meetingStartTime, LocalDateTime meetingEndTime) {
+	public void update(String title, String description, Integer capacity, Set<MeetingDay> meetingDays, LocalTime meetingStartTime, LocalTime meetingEndTime) {
 		this.title = title;
 		this.description = description;
 		this.capacity = capacity;
+		this.meetingDays.clear();
+		if (meetingDays != null) {
+			this.meetingDays.addAll(meetingDays);
+		}
 		this.meetingStartTime = meetingStartTime;
 		this.meetingEndTime = meetingEndTime;
 	}
