@@ -66,7 +66,8 @@ function seed(): StoreShape {
       {
         id: "e1",
         title: "알고리즘 스터디 정기모임",
-        date: "2026-07-15",
+        startDate: "2026-07-15",
+        endDate: "2026-07-15",
         studyId: "s1",
         studyTitle: "알고리즘 스터디 3기",
         type: "STUDY",

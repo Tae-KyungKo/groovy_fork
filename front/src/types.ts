@@ -79,7 +79,8 @@ export interface WaitingPosition {
 export interface CalendarEvent {
   id: string;
   title: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   studyId?: string;
   studyTitle?: string;
   type: "PERSONAL" | "STUDY";
