@@ -1,8 +1,4 @@
 # EC2 운영 서버 전용 docker-compose 파일
-# - frontend/backend는 로컬처럼 소스를 직접 빌드하지 않고, CI에서 Docker Hub로 push한 이미지를 pull해서 사용한다.
-# - 이 파일은 docker-compose.local.yml과 달리 build 컨텍스트를 갖지 않으므로 EC2에는 소스코드가 없어도 배포가 가능하다.
-# - 변수 값은 배포 파이프라인이 함께 전송하는 .env.prod 파일에서 주입된다.
-#   (docker compose 기본 관례상 파일명이 .env가 아니므로, 실행 시 반드시 --env-file .env.prod 옵션을 함께 지정해야 한다.)
 # - 프론트엔드 앞단에 nginx가 아직 없으므로, 당분간은 컨테이너 포트를 그대로 호스트에 노출하는 임시 구성이다.
 
 services:
