@@ -9,7 +9,8 @@ jobs:
   # ==================================================================
   # Job 0. 변경 경로 감지
   #   - groovy/**, front/** 중 어느 쪽이 이번 push에서 수정됐는지 판별한다.
-  #   - 저장소를 checkout하지 않고 GitHub API로만 비교하므로 이 잡 자체가 매우 빠르다.
+  #   - push 이벤트에서는 GitHub API만으로 비교가 불가능하므로(로컬 git 히스토리 필요),
+  #     이전 커밋과 비교할 수 있도록 checkout이 필요하다.
   # ==================================================================
   changes:
     runs-on: ubuntu-latest
@@ -17,6 +18,11 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
+      - name: 레포지토리 코드 체크아웃
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
       - name: 변경된 경로 필터링
         id: filter
         uses: dorny/paths-filter@v3
