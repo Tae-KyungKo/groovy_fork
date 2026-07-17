@@ -86,10 +86,9 @@ jobs:
           context: ./front # 실제 프론트엔드 소스 경로(front 폴더)
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/groovy-frontend:latest
-          # Vite는 빌드 시점에 VITE_* 값을 정적 번들에 고정하므로 build-args로 주입한다.
-          # nginx 리버스 프록시 도입 전까지는 EC2의 8080 포트(backend)를 브라우저가 직접 호출한다.
+          # frontend 이미지 내부의 nginx가 /api 요청을 backend 컨테이너로 리버스 프록시하므로,
+          # 브라우저는 상대경로(/api/...)로만 호출한다 (VITE_API_BASE_URL 주입 불필요).
           build-args: |
-            VITE_API_BASE_URL=http://${{ secrets.EC2_HOST }}:8080
             VITE_USE_MOCK=false
 
   # ==================================================================
