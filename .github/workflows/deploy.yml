@@ -27,6 +27,13 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v3
         with:
+          # base를 명시하지 않으면 레포지토리의 default branch(dev)를 기준으로 비교하는데,
+          # 이 워크플로우는 main push에서만 실행되므로 head(main)와 다른 branch(dev)가 base로 잡혀
+          # 3-dot diff(merge-base 비교)가 되어 버린다. main 병합 직후에는 merge-base가 dev의
+          # 최신 커밋 자체가 되어 diff가 0으로 나와 build 잡이 잘못 스킵되는 문제가 있었다.
+          # base를 main으로 고정하면 base==head가 되어 github.event.before(직전 커밋)와
+          # 정확히 비교하는 정상 경로를 타게 된다.
+          base: main
           filters: |
             backend:
               - 'groovy/**'
