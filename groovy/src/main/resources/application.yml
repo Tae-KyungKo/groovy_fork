@@ -1,5 +1,6 @@
 spring:
   application:
+    # CI 이미지 교체 테스트용 마커 (동작에는 영향 없음)
     name: groovy-backend
   threads:
     virtual:
