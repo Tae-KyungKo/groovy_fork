@@ -1,0 +1,164 @@
+name: groovy-fork-CICD-deploy # Actions 탭에 표시될 워크플로의 이름
+
+on:
+  push:
+    branches:
+      - main # main 브랜치에 merge/push 되었을 때만 CI/CD 파이프라인 실행
+
+jobs:
+  # ==================================================================
+  # Job 0. 변경 경로 감지
+  #   - groovy/**, front/** 중 어느 쪽이 이번 push에서 수정됐는지 판별한다.
+  #   - push 이벤트에서는 GitHub API만으로 비교가 불가능하므로(로컬 git 히스토리 필요),
+  #     이전 커밋과 비교할 수 있도록 checkout이 필요하다.
+  # ==================================================================
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: 레포지토리 코드 체크아웃
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: 변경된 경로 필터링
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'groovy/**'
+            frontend:
+              - 'front/**'
+
+  # ==================================================================
+  # Job 1. 백엔드 이미지 빌드 및 Push (groovy/** 변경 시에만 실행)
+  # ==================================================================
+  build-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 레포지토리 코드 체크아웃
+        uses: actions/checkout@v6
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: 백엔드(Spring Boot) 이미지 빌드 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./groovy # 백엔드 소스 경로
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/groovy-backend:latest
+
+  # ==================================================================
+  # Job 2. 프론트엔드 이미지 빌드 및 Push (front/** 변경 시에만 실행)
+  # ==================================================================
+  build-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 레포지토리 코드 체크아웃
+        uses: actions/checkout@v6
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: 프론트엔드(React/Vite) 이미지 빌드 및 Push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./front # 실제 프론트엔드 소스 경로(front 폴더)
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/groovy-frontend:latest
+          # frontend 이미지 내부의 nginx가 /api 요청을 backend 컨테이너로 리버스 프록시하므로,
+          # 브라우저는 상대경로(/api/...)로만 호출한다 (VITE_API_BASE_URL 주입 불필요).
+          build-args: |
+            VITE_USE_MOCK=false
+
+  # ==================================================================
+  # Job 3. EC2 배포 (CD)
+  #   - backend/frontend 둘 중 하나가 스킵되어도(변경이 없어도) 정상 진행되어야 하므로
+  #     if 조건에서 각 build 잡의 결과를 "성공 또는 스킵"으로 명시적으로 허용한다.
+  #   - docker compose pull은 변경되지 않은 이미지는 그대로 두고, 변경된 이미지만 새로 받아온다.
+  # ==================================================================
+  deploy:
+    needs: [changes, build-backend, build-frontend]
+    if: |
+      always() &&
+      needs.changes.result == 'success' &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 레포지토리 코드 체크아웃
+        uses: actions/checkout@v6
+
+      # ------------------------------------------------------------
+      # 운영용 .env.prod 동적 생성
+      # ------------------------------------------------------------
+      - name: 운영 배포용 .env.prod 파일 동적 생성
+        run: |
+          cat <<EOF > .env.prod
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          PROD_DB_URL=${{ secrets.PROD_DB_URL }}
+          PROD_DB_USERNAME=${{ secrets.PROD_DB_USERNAME }}
+          PROD_DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+          MYSQL_DATABASE=groovy_db
+          MYSQL_ROOT_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+          JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          EOF
+
+      # scp-action은 원격 대상 폴더가 없으면 전송이 실패할 수 있으므로 미리 생성해 둔다.
+      # (EC2에는 git clone을 하지 않기 때문에 이 폴더는 저장소 checkout으로 자동 생성되지 않는다.)
+      - name: EC2 배포 대상 폴더 사전 생성
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user # Amazon Linux 기본 계정
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: mkdir -p /home/ec2-user/groovy
+
+      - name: docker-compose.prod.yml / .env.prod 파일 EC2로 전송
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user # Amazon Linux 기본 계정
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml,.env.prod"
+          target: "/home/ec2-user/groovy" # EC2 상의 배포 대상 폴더
+          strip_components: 0
+
+      # ------------------------------------------------------------
+      # EC2 SSH 접속 후 배포 자동화 스크립트 실행
+      # ------------------------------------------------------------
+      - name: EC2 SSH 접속 및 배포 실행
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user # Amazon Linux 기본 계정
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/groovy
+
+            # docker compose는 파일명이 .env가 아니면 자동으로 읽지 않으므로 --env-file을 명시한다.
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+            # 더 이상 참조되지 않는 이전 이미지 레이어 정리
+            docker image prune -f

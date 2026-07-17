@@ -1,45 +1,36 @@
 services:
 
   frontend:
-    build:
-      context: ./front
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME}/groovy-frontend:latest
 
     container_name: groovy-front
 
-    # 컨테이너 내부는 nginx가 80번에서 서빙하므로 호스트 5173 -> 컨테이너 80으로 매핑한다.
+    restart: unless-stopped
+
+    # nginx가 정적 파일 서빙과 /api 리버스 프록시를 함께 담당하므로 80번만 외부에 노출한다.
     ports:
-      - "5173:80"
-
-    environment:
-      VITE_USE_MOCK: ${VITE_USE_MOCK:-false}
-
+      - "80:80"
 
     depends_on:
       - backend
 
 
-
   backend:
-    build:
-      context: ./groovy
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME}/groovy-backend:latest
 
     container_name: groovy-backend
-
-    restart: unless-stopped
+    restart: unless-stopped           # 이 부분은 새로 추가 됐음
 
     depends_on:
       mysql:
         condition: service_healthy
 
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
+    # frontend(nginx)가 도커 내부망(backend:8080)으로만 호출하므로 호스트에 포트를 노출하지 않는다.
 
     environment:
-      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DEV_DB_USERNAME: root
-      SPRING_DEV_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DEV_DB_URL: ${PROD_DB_URL}
+      SPRING_DEV_DB_USERNAME: ${PROD_DB_USERNAME}
+      SPRING_DEV_DB_PASSWORD: ${PROD_DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       SERVER_PORT: ${SERVER_PORT:-8080}
