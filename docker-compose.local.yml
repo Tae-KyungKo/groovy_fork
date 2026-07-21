@@ -19,7 +19,7 @@ services:
       - backend
 
 
-
+## 수정 목표 백/프론트 분리
   backend:
     build:
       context: ./groovy
