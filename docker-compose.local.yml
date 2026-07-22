@@ -65,5 +65,83 @@ services:
       timeout: 5s
       retries: 10
 
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: groovy-mysqld-exporter
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # 최신 mysqld_exporter는 DATA_SOURCE_NAME 환경변수를 지원하지 않고 .my.cnf 파일만 읽으므로,
+    # 비밀번호를 이미지에 굽지 않고 컨테이너 시작 시 env var로 파일을 생성한 뒤 실행한다.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        printf '[client]\nuser=root\npassword=%s\nhost=mysql\nport=3306\n' "$$MYSQL_ROOT_PASSWORD" > /tmp/.my.cnf &&
+        exec /bin/mysqld_exporter --config.my-cnf=/tmp/.my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQLD_EXPORTER_PORT:-9104}:9104"
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    container_name: groovy-nginx-exporter
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    command:
+      - --nginx.scrape-uri=http://frontend/nginx_status
+    ports:
+      - "${NGINX_EXPORTER_PORT:-9113}:9113"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: groovy-node-exporter
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: groovy-prometheus
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - mysqld-exporter
+      - nginx-exporter
+      - node-exporter
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: groovy-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+
 volumes:
   groovy-mysql-data:
+  prometheus-data:
+  grafana-data:

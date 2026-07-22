@@ -30,7 +30,11 @@ public class SecurityConfig {
 	private static final String[] PERMIT_ALL_PATTERNS = {
 		"/api/auth/signup",
 		"/api/auth/login",
-		"/api/health"
+		"/api/health",
+		// Prometheus가 JWT 없이 스크랩하므로 actuator 엔드포인트는 인증에서 제외한다.
+		// management.endpoints.web.exposure.include로 health/prometheus/metrics만 열어둔 상태.
+		"/actuator/prometheus",
+		"/actuator/health"
 	};
 
 	// 스터디 목록/상세 조회, 전체 태그 목록 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
