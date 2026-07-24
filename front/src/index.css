@@ -1,15 +1,23 @@
 :root {
-  --text: #4b5563;
-  --text-h: #111827;
-  --bg: #ffffff;
-  --bg-muted: #f9fafb;
-  --border: #e5e7eb;
-  --accent: #7c3aed;
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f5;
+  --border: rgba(112, 115, 124, 0.16);
+  --border-strong: rgba(112, 115, 124, 0.32);
+  --text: rgba(55, 56, 60, 0.61);
+  --text-h: #171717;
+  --text-assistive: rgba(55, 56, 60, 0.4);
+  --accent: #0066ff;
+  --accent-strong: #0054d1;
+  --accent-soft: #eaf2fe;
   --accent-contrast: #ffffff;
-  --study-accent: #16a34a;
-  --study-accent-contrast: #ffffff;
-  --danger: #dc2626;
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --positive-bg: #e6faf0;
+  --positive-text: #009664;
+  --danger: #e03636;
+  --shadow: 0 8px 24px rgba(23, 23, 23, 0.08);
+  --shadow-sm: 0 2px 8px rgba(23, 23, 23, 0.06);
+  --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
 
   font: 16px/1.5 var(--sans);
   color-scheme: light dark;
@@ -19,15 +27,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #14151a;
-    --bg-muted: #1c1d24;
-    --border: #2e303a;
-    --accent: #a78bfa;
-    --accent-contrast: #14151a;
-    --study-accent: #4ade80;
-    --study-accent-contrast: #0b1a10;
+    --bg: #0d0e10;
+    --surface: #1a1b1e;
+    --surface-alt: #26272b;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --text: rgba(245, 246, 247, 0.64);
+    --text-h: #f5f6f7;
+    --text-assistive: rgba(245, 246, 247, 0.4);
+    --accent: #408cff;
+    --accent-strong: #69a5ff;
+    --accent-soft: rgba(64, 140, 255, 0.16);
+    --accent-contrast: #ffffff;
+    --positive-bg: rgba(0, 200, 140, 0.16);
+    --positive-text: #3cd2a0;
+    --danger: #ff6363;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -43,12 +59,33 @@ h1,
 h2,
 h3 {
   color: var(--text-h);
-  font-weight: 600;
   margin: 0;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 a {
   color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-strong);
 }
 
 .app-shell {
@@ -58,29 +95,47 @@ a {
 }
 
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 12px 24px;
+  gap: 36px;
+  height: 64px;
+  padding: 0 32px;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
 .app-header .brand {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 20px;
-  color: var(--text-h);
+  letter-spacing: -0.02em;
+  color: var(--accent);
   text-decoration: none;
 }
 
 .app-header nav {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 28px;
   flex: 1;
 }
 
 .app-header nav a {
   text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--text);
+}
+
+.app-header nav a:hover {
+  color: var(--text-h);
+}
+
+.app-header nav a.active {
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .header-actions {
@@ -89,18 +144,30 @@ a {
   gap: 12px;
 }
 
+.header-actions > a:not(.button) {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.header-actions > a:not(.button):hover {
+  background: var(--surface-alt);
+}
+
 .app-main {
   flex: 1;
   width: 100%;
-  max-width: 960px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: 40px 32px 100px;
 }
 
 .page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .page-header {
@@ -122,23 +189,51 @@ a {
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  background: var(--bg-muted);
+  border-radius: 20px;
+  padding: 22px 24px;
+  background: var(--surface);
 }
 
 .auth-page {
   display: flex;
   justify-content: center;
-  padding-top: 40px;
+  align-items: center;
+  padding: 40px 0;
+  min-height: 60vh;
+}
+
+.auth-page .form {
+  max-width: 400px;
+  gap: 18px;
+  border-radius: 24px;
+  padding: 44px 36px;
+  box-shadow: var(--shadow);
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.auth-logo {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.auth-tagline {
+  font-size: 14px;
+  color: var(--text);
+  margin: 8px 0 0;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
-  max-width: 360px;
+  max-width: 400px;
 }
 
 .form-inline {
@@ -151,35 +246,66 @@ a {
 .form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 14px;
-  color: var(--text);
+  font-weight: 600;
+  color: var(--text-h);
 }
 
 .form input,
 .form select,
 .form textarea {
   font: inherit;
-  padding: 8px 10px;
+  font-weight: 400;
+  font-size: 15px;
+  padding: 13px 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  border-radius: 12px;
+  background: var(--surface-alt);
   color: var(--text-h);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.form input::placeholder,
+.form textarea::placeholder {
+  color: var(--text-assistive);
+}
+
+.form textarea {
+  resize: vertical;
+  line-height: 1.6;
 }
 
 button,
 .button {
   font: inherit;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: 12px;
+  padding: 11px 20px;
   background: var(--accent);
   color: var(--accent-contrast);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s;
+}
+
+button:hover,
+.button:hover {
+  background: var(--accent-strong);
+  color: var(--accent-contrast);
 }
 
 button:disabled {
@@ -187,10 +313,24 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.form > button[type="submit"] {
+  padding: 15px;
+  font-size: 16px;
+  border-radius: 14px;
+  margin-top: 4px;
+}
+
 button.secondary,
 .button.secondary {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+button.secondary:hover,
+.button.secondary:hover {
+  background: var(--surface-alt);
   color: var(--text-h);
 }
 
@@ -201,15 +341,23 @@ button.danger,
   color: var(--danger);
 }
 
+button.danger:hover,
+.button.danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
 .button-row {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
 .error {
   color: var(--danger);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .hint {
@@ -220,36 +368,80 @@ button.danger,
 .study-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  grid-auto-rows: 1fr;
+  gap: 20px;
 }
 
 .study-card {
+  position: relative;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  background: var(--bg-muted);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.study-card-top {
+.study-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+  color: inherit;
+}
+
+.study-status {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.study-status.full {
+  background: rgba(23, 23, 23, 0.55);
+  color: #fff;
+}
+
+.study-card-meta {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: auto;
 }
 
 .match-score {
   font-size: 12px;
+  font-weight: 700;
   color: var(--accent);
   white-space: nowrap;
 }
 
 .description {
   font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.study-card .description {
+  font-size: 13.5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 40px;
 }
 
 .capacity {
@@ -260,22 +452,72 @@ button.danger,
 .tag-picker {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
+}
+
+.study-card .tag-picker {
   gap: 6px;
 }
 
-.tag-chip {
-  font-size: 13px;
-  padding: 4px 10px;
+/* 카드/상세에 붙는 읽기 전용 태그: 작은 소프트 배지 */
+span.tag-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 선택 가능한 태그 칩(버튼): 알약형 토글 */
+button.tag-chip {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 15px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
+  background: transparent;
+  color: var(--text-h);
+  transition: all 0.15s;
+}
+
+button.tag-chip:hover {
+  background: var(--surface-alt);
+  color: var(--text-h);
 }
 
 button.tag-chip.active {
   background: var(--accent);
   color: var(--accent-contrast);
   border-color: var(--accent);
+}
+
+button.tag-chip.active:hover {
+  background: var(--accent-strong);
+}
+
+/* 모임 요일 선택: 정사각 라운드 칩 */
+button.day-chip {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+button.day-chip:hover {
+  background: var(--surface-alt);
+  color: var(--text-h);
+}
+
+button.day-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .list {
@@ -294,31 +536,37 @@ button.tag-chip.active {
   gap: 12px;
 }
 
+.list .card {
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
 .strong {
   color: var(--text-h);
   font-weight: 600;
 }
 
 .status {
-  font-size: 13px;
-  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 9px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .status-approved {
-  color: #16a34a;
-  border-color: #16a34a;
+  color: var(--positive-text);
+  background: var(--positive-bg);
 }
 
 .status-rejected {
-  color: var(--danger);
-  border-color: var(--danger);
+  color: var(--text-assistive);
+  background: var(--surface-alt);
 }
 
 .status-pending {
-  color: var(--text);
-  border-color: var(--border);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .detail-list {
@@ -329,12 +577,15 @@ button.tag-chip.active {
 }
 
 .detail-list dt {
-  color: var(--text);
+  color: var(--text-assistive);
+  font-size: 13px;
 }
 
 .detail-list dd {
   margin: 0;
   color: var(--text-h);
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .notification-bell {
@@ -345,8 +596,14 @@ button.tag-chip.active {
   background: transparent;
   border: none;
   font-size: 18px;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 999px;
   position: relative;
+  color: var(--text);
+}
+
+.icon-button:hover {
+  background: var(--surface-alt);
   color: var(--text-h);
 }
 
@@ -369,14 +626,14 @@ button.tag-chip.active {
 .notification-dropdown {
   position: absolute;
   right: 0;
-  top: 32px;
-  width: 280px;
+  top: 40px;
+  width: 300px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
   padding: 8px;
-  z-index: 10;
+  z-index: 200;
 }
 
 .notification-dropdown ul {
@@ -385,30 +642,32 @@ button.tag-chip.active {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   max-height: 320px;
   overflow-y: auto;
 }
 
 .notification-dropdown li {
-  padding: 8px;
-  border-radius: 8px;
-  background: var(--bg-muted);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-alt);
   font-size: 13px;
 }
 
 .notification-dropdown time {
   font-size: 11px;
-  color: var(--text);
+  color: var(--text-assistive);
 }
 
 .tag-actions {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .month-label {
-  min-width: 120px;
+  min-width: 110px;
   text-align: center;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .calendar-scroll {
@@ -418,57 +677,74 @@ button.tag-chip.active {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(120px, 1fr));
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+  border-radius: 20px;
+  padding: 14px 14px 8px;
   min-width: 840px;
 }
 
 .calendar-weekday {
-  padding: 8px;
-  font-size: 13px;
+  padding: 8px 6px;
+  font-size: 12px;
   font-weight: 600;
-  text-align: center;
-  color: var(--text);
-  background: var(--bg-muted);
-  border-bottom: 1px solid var(--border);
+  text-align: left;
+  color: var(--text-assistive);
 }
 
 .calendar-cell {
   font: inherit;
+  font-weight: 400;
   cursor: pointer;
   border: none;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
   border-radius: 0;
-  background: var(--bg);
+  background: transparent;
   color: inherit;
-  min-height: 96px;
-  padding: 6px;
+  min-height: 104px;
+  padding: 8px 6px 4px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
   text-align: left;
+  overflow: hidden;
   transition: background-color 120ms ease;
 }
 
 .calendar-cell:hover {
-  background: var(--bg-muted);
+  background: color-mix(in srgb, var(--text-h) 3%, transparent);
 }
 
-.calendar-cell.other-month {
-  color: var(--border);
-  background: var(--bg-muted);
+.calendar-cell.other-month .calendar-cell-date {
+  color: var(--text-assistive);
 }
 
 .calendar-cell.today {
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .calendar-cell-date {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
+  color: var(--text-h);
+  height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+/* 일요일 날짜는 빨간색 (첫 줄 7칸은 요일 헤더 div, 그 뒤 button이 날짜 칸) */
+.calendar-grid > button.calendar-cell:nth-of-type(7n + 1) .calendar-cell-date {
+  color: var(--danger);
+}
+
+.calendar-cell.today .calendar-cell-date {
+  width: 22px;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-contrast) !important;
+  font-weight: 700;
 }
 
 .calendar-cell-events {
@@ -477,15 +753,15 @@ button.tag-chip.active {
   gap: 3px;
 }
 
-/* 하루짜리 일정: 앱 전체에서 태그/상태 배지에 쓰는 알약(pill) 모양(border-radius: 999px)과
-   같은 어휘를 재사용해, 여러 날 일정(막대)과 형태만으로도 뚜렷이 구분되게 한다. */
+/* 하루짜리 일정: 소프트 컬러 알약. 스터디=블루, 개인=그린으로 종류를 구분한다. */
 .calendar-event {
   font-size: 11px;
-  line-height: 16px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--bg-muted);
+  font-weight: 600;
+  line-height: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--surface-alt);
   color: var(--text-h);
   white-space: nowrap;
   overflow: hidden;
@@ -493,88 +769,78 @@ button.tag-chip.active {
 }
 
 .calendar-event-study {
-  border-color: color-mix(in srgb, var(--study-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--study-accent) 16%, var(--bg-muted));
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .calendar-event-personal {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: color-mix(in srgb, var(--accent) 16%, var(--bg-muted));
+  background: var(--positive-bg);
+  color: var(--positive-text);
 }
 
 /* 이 칸에는 일정이 없지만 같은 주의 다른 날에는 걸쳐 있는 레인의 빈 자리.
    보이지는 않되 높이는 그대로 차지해 옆 칸의 막대와 줄을 맞춘다. */
 .calendar-event-placeholder {
   visibility: hidden;
-  border-color: transparent;
   background: transparent;
 }
 
-/* 시작일과 종료일이 다른(여러 날에 걸친) 일정. 하루짜리 일정의 옅은 알약 모양과 뚜렷이
-   구분되도록 진한 색으로 꽉 채운 막대로 그린다. 달력이 주 단위로 줄바꿈되는 그리드라
-   한 주 행마다 구간을 이어붙여야 하는데, 칸과 칸 사이에는 그리드 구분선(1px)이 있어서
-   막대를 칸 안쪽 여백(padding)만큼만 늘리면 그 구분선이 막대 위에 고스란히 남아 끊겨
-   보인다. 구분선 두께(1px)까지 더 늘려 뒤 칸(DOM에서 나중에 그려져 위에 쌓이는 칸)의
-   막대가 앞 칸의 테두리선을 덮어 지우도록 해서, 실제로 하나로 이어진 수평선처럼 보이게
-   한다. */
+/* 여러 날에 걸친 일정: 같은 소프트 컬러의 이어지는 막대. 달력이 주 단위 그리드라
+   한 주 행마다 구간을 이어붙여야 하는데, 칸 안쪽 여백(6px)보다 1px 더 늘려
+   옆 칸의 막대와 빈틈없이 맞닿아 하나로 이어진 수평선처럼 보이게 한다. */
 .calendar-event-range {
-  border: none;
   border-radius: 0;
   margin: 0 -7px;
-  padding: 2px 5px;
-  color: var(--accent-contrast);
-  background: var(--accent);
-  font-weight: 600;
-}
-
-.calendar-event-range.calendar-event-study {
-  color: var(--study-accent-contrast);
-  background: var(--study-accent);
+  padding: 0 5px;
 }
 
 .calendar-event-range.seg-start {
   margin-left: 0;
-  padding-left: 8px;
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
+  padding-left: 6px;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
 }
 
 .calendar-event-range.seg-end {
   margin-right: 0;
-  padding-right: 8px;
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
+  padding-right: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 
 .calendar-event-more {
   align-self: flex-start;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 999px;
-  color: var(--text);
-  background: var(--bg-muted);
+  padding: 0 6px;
+  color: var(--text-assistive);
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
-  padding: 16px;
+  z-index: 1100;
+  padding: 24px;
 }
 
 .modal {
   width: 100%;
-  max-width: 360px;
+  max-width: 440px;
+  padding: 28px;
+  box-shadow: var(--shadow);
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-header h2 {
+  font-size: 17px;
 }

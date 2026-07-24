@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { NotificationBell } from "./NotificationBell";
 
@@ -17,22 +17,24 @@ export function Header() {
         Groovy
       </Link>
       <nav>
-        <Link to="/studies">스터디</Link>
-        {user && <Link to="/calendar">캘린더</Link>}
+        <NavLink to="/studies">스터디</NavLink>
+        {user && <NavLink to="/calendar">캘린더</NavLink>}
       </nav>
       <div className="header-actions">
         {user ? (
           <>
             <NotificationBell />
             <Link to="/me">{user.name}</Link>
-            <button type="button" onClick={handleLogout}>
+            <button type="button" className="secondary" onClick={handleLogout}>
               로그아웃
             </button>
           </>
         ) : (
           <>
             <Link to="/login">로그인</Link>
-            <Link to="/signup">회원가입</Link>
+            <Link to="/signup" className="button">
+              회원가입
+            </Link>
           </>
         )}
       </div>

@@ -29,7 +29,10 @@ export function SignupPage() {
   return (
     <div className="auth-page">
       <form className="card form" onSubmit={handleSubmit}>
-        <h1>회원가입</h1>
+        <div className="auth-brand">
+          <h1 className="auth-logo">Groovy</h1>
+          <p className="auth-tagline">함께 성장하는 스터디 공간</p>
+        </div>
         <label>
           이름
           <input value={name} onChange={(e) => setName(e.target.value)} required />

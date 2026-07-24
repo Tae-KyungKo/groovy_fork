@@ -115,7 +115,7 @@ export function StudyFormPage() {
               <button
                 key={day}
                 type="button"
-                className={`tag-chip${meetingDays.includes(day) ? " active" : ""}`}
+                className={`day-chip${meetingDays.includes(day) ? " active" : ""}`}
                 onClick={() => toggleDay(day)}
               >
                 {DAY_LABELS[day]}
