@@ -588,10 +588,6 @@ button.day-chip.active {
   font-size: 15px;
 }
 
-.notification-bell {
-  position: relative;
-}
-
 .icon-button {
   background: transparent;
   border: none;
@@ -608,58 +604,6 @@ button.day-chip.active {
 .icon-button:hover {
   background: var(--surface-alt);
   color: var(--text-h);
-}
-
-.badge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 10px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 3px;
-}
-
-.notification-dropdown {
-  position: absolute;
-  right: 0;
-  top: 40px;
-  width: 300px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  padding: 8px;
-  z-index: 200;
-}
-
-.notification-dropdown ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.notification-dropdown li {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--surface-alt);
-  font-size: 13px;
-}
-
-.notification-dropdown time {
-  font-size: 11px;
-  color: var(--text-assistive);
 }
 
 .tag-actions {

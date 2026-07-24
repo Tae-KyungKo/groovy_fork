@@ -1,6 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -23,7 +22,6 @@ export function Header() {
       <div className="header-actions">
         {user ? (
           <>
-            <NotificationBell />
             <Link to="/me">{user.name}</Link>
             <button type="button" className="secondary" onClick={handleLogout}>
               로그아웃

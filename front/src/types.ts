@@ -92,10 +92,3 @@ export interface CalendarStudyOption {
   studyId: string;
   title: string;
 }
-
-export interface AppNotification {
-  id: string;
-  message: string;
-  createdAt: string;
-  read: boolean;
-}
