@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyToStudy, cancelApplication, deleteStudy, getStudy } from "../api/studies";
 import { listTags } from "../api/tags";
-import { getWaitingPosition, joinWaiting, leaveWaiting } from "../api/waiting";
 import { CalendarIcon, ChevronLeftIcon, ClockIcon, UsersIcon } from "../components/icons";
 import { useAuth } from "../context/AuthContext";
-import type { Study, Tag, WaitingPosition } from "../types";
+import type { Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
 import { formatTime } from "../utils/date";
 
@@ -19,7 +18,6 @@ export function StudyDetailPage() {
   const [study, setStudy] = useState<Study | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const [applyState, setApplyState] = useState<ApplyState>("NONE");
-  const [waiting, setWaiting] = useState<WaitingPosition | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -34,10 +32,7 @@ export function StudyDetailPage() {
       setTags(tagList);
       setLoading(false);
     });
-    if (user) {
-      getWaitingPosition(studyId).then(setWaiting);
-    }
-  }, [studyId, user]);
+  }, [studyId]);
 
   const tagsById = useMemo(() => new Map(tags.map((t) => [t.id, t])), [tags]);
 
@@ -56,18 +51,6 @@ export function StudyDetailPage() {
     if (!studyId) return;
     await cancelApplication(studyId);
     setApplyState("NONE");
-  }
-
-  async function handleJoinWaiting() {
-    if (!studyId) return;
-    const position = await joinWaiting(studyId);
-    setWaiting(position);
-  }
-
-  async function handleLeaveWaiting() {
-    if (!studyId) return;
-    await leaveWaiting(studyId);
-    setWaiting(null);
   }
 
   async function handleDelete() {
@@ -154,28 +137,21 @@ export function StudyDetailPage() {
                 신청 취소
               </button>
             )}
-
-            {isFull &&
-              (waiting ? (
-                <button type="button" className="wide secondary" onClick={handleLeaveWaiting}>
-                  대기 취소 (내 순번 {waiting.position}/{waiting.totalWaiting})
-                </button>
-              ) : (
-                <button type="button" className="wide secondary" onClick={handleJoinWaiting}>
-                  빈자리 대기 신청
-                </button>
-              ))}
           </>
         )}
         {!user && <p className="host-hint">참여 신청은 로그인 후 이용할 수 있습니다.</p>}
         {isOwner && (
-          <p className="host-hint">
-            방장이신가요? <Link to={`/studies/${study.id}/applications`}>신청자 관리</Link> ·{" "}
-            <Link to={`/studies/${study.id}/edit`}>스터디 수정</Link> ·{" "}
-            <button type="button" className="link-danger" onClick={handleDelete}>
-              삭제
+          <div className="owner-actions">
+            <Link to={`/studies/${study.id}/applications`} className="button">
+              신청자 관리
+            </Link>
+            <Link to={`/studies/${study.id}/edit`} className="button secondary">
+              스터디 수정
+            </Link>
+            <button type="button" className="danger" onClick={handleDelete}>
+              스터디 삭제
             </button>
-          </p>
+          </div>
         )}
         {actionError && <p className="error">{actionError}</p>}
       </div>

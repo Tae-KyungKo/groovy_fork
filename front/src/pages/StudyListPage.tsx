@@ -95,7 +95,7 @@ export function StudyListPage() {
               onClick={handlePreviewMatches}
               disabled={matching || selectedTagIds.length === 0}
             >
-              {matching ? "매칭 중..." : "전체 보기"}
+              {matching ? "매칭 중..." : "태그 적용"}
             </button>
             {matches && (
               <button type="button" className="secondary" onClick={clearMatches}>

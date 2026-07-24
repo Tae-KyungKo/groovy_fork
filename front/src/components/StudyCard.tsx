@@ -31,7 +31,11 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
         ))}
       </div>
       <h3>{study.title}</h3>
-      {matchScore !== undefined && <span className="match-score">매칭 {matchScore}%</span>}
+      {matchScore !== undefined && (
+        <span className="match-score">
+          태그 매칭률 {Number.isInteger(matchScore) ? matchScore : matchScore.toFixed(2)}%
+        </span>
+      )}
       <p className="description">{study.description}</p>
       <div className="study-card-meta">
         <span>{scheduleParts.length ? scheduleParts.join(" · ") : "일정 미정"}</span>

@@ -1124,27 +1124,23 @@ button.wide {
   border-radius: 14px;
 }
 
+.owner-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.owner-actions > * {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+
 .host-hint {
   text-align: center;
   font-size: 13px;
   color: var(--text-assistive);
   margin: 0;
-}
-
-.link-danger {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--danger);
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: underline;
-  display: inline;
-}
-
-.link-danger:hover {
-  background: none;
-  color: var(--danger);
 }
 
 /* ---- 마이페이지 ---- */

@@ -72,10 +72,6 @@ export interface PageResponse<T> {
   size: number;
 }
 
-export interface WaitingPosition {
-  position: number;
-  totalWaiting: number;
-}
 
 export interface CalendarEvent {
   id: string;
