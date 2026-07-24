@@ -1017,21 +1017,334 @@ button.type-btn.active:hover {
   color: var(--accent);
 }
 
-.modal-actions {
+.form-actions {
   display: flex;
   gap: 10px;
   margin-top: 4px;
 }
 
-.modal-actions button {
+.form-actions button {
   padding: 13px;
   font-size: 15px;
 }
 
-.modal-actions button.secondary {
+.form-actions button.secondary {
   flex: 1;
 }
 
-.modal-actions button[type="submit"] {
+.form-actions button[type="submit"] {
   flex: 2;
+}
+
+/* ---- 스터디 상세 / 폼 공통 (760px 중앙 정렬) ---- */
+
+.detail-main {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.me-main {
+  max-width: 880px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  color: var(--text-h);
+}
+
+.detail-tags {
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.detail-title {
+  margin-bottom: 20px;
+  line-height: 1.35;
+}
+
+.host-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.host-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.host-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.avatar {
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 24px;
+}
+
+.meta-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text);
+}
+
+.meta-cell svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.meta-label {
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  margin-bottom: 4px;
+}
+
+.meta-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.section-title {
+  font-size: 17px;
+  margin-bottom: 12px;
+}
+
+.desc-text {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.7;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.action-bar {
+  margin-top: 12px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+button.wide {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+.host-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-assistive);
+  margin: 0;
+}
+
+.link-danger {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  display: inline;
+}
+
+.link-danger:hover {
+  background: none;
+  color: var(--danger);
+}
+
+/* ---- 마이페이지 ---- */
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.profile-email {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+button.small,
+.button.small {
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.me-rows {
+  margin-top: 4px;
+}
+
+.me-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.me-rows > .me-row:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.me-row-main {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+}
+
+.me-row-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me-row-main:hover .me-row-title {
+  color: var(--accent);
+}
+
+.me-row-meta {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--text-assistive);
+}
+
+.status-open {
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.status-closed {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.pill-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pill-action:hover {
+  color: var(--accent-strong);
+}
+
+.cancel-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+
+.cancel-link:hover {
+  background: none;
+  color: var(--text-h);
+}
+
+/* ---- 스터디 생성/수정 폼 ---- */
+
+.form-card {
+  max-width: none;
+  padding: 28px;
+  gap: 20px;
+}
+
+.req {
+  font-style: normal;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.opt {
+  font-style: normal;
+  color: var(--text-assistive);
+  font-weight: 500;
+  font-size: 12.5px;
 }

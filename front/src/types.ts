@@ -51,9 +51,10 @@ export interface Study {
   memberCount: number;
   tagIds: number[];
   // 요일 반복 일정: meetingDays(요일 목록) + meetingStartTime/meetingEndTime("HH:mm").
+  // 요일·시각은 백엔드에서 선택 항목이라 비어 있을 수 있다.
   meetingDays: DayOfWeek[];
-  meetingStartTime: string;
-  meetingEndTime: string;
+  meetingStartTime: string | null;
+  meetingEndTime: string | null;
   createdAt: string;
 }
 

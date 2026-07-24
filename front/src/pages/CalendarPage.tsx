@@ -368,7 +368,7 @@ export function CalendarPage() {
                   </select>
                 </label>
               ))}
-            <div className="modal-actions">
+            <div className="form-actions">
               <button type="button" className="secondary" onClick={closeModal}>
                 취소
               </button>

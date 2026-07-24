@@ -10,6 +10,12 @@ interface StudyCardProps {
 
 export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
   const isFull = study.memberCount >= study.capacity;
+  const scheduleParts = [
+    study.meetingDays.length ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ") : null,
+    study.meetingStartTime && study.meetingEndTime
+      ? `${study.meetingStartTime} - ${study.meetingEndTime}`
+      : null,
+  ].filter(Boolean);
 
   return (
     <Link to={`/studies/${study.id}`} className="study-card">
@@ -27,10 +33,7 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
       {matchScore !== undefined && <span className="match-score">매칭 {matchScore}%</span>}
       <p className="description">{study.description}</p>
       <div className="study-card-meta">
-        <span>
-          {study.meetingDays.map((day) => DAY_LABELS[day]).join(", ")} · {study.meetingStartTime} -{" "}
-          {study.meetingEndTime}
-        </span>
+        <span>{scheduleParts.length ? scheduleParts.join(" · ") : "일정 미정"}</span>
         <span>
           {study.memberCount}/{study.capacity}명
         </span>

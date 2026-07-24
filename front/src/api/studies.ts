@@ -7,8 +7,9 @@ export interface StudyPayload {
   capacity: number;
   tagIds: number[];
   meetingDays: DayOfWeek[];
-  meetingStartTime: string;
-  meetingEndTime: string;
+  // 백엔드에서 선택 항목(null 허용)이라 비워두면 아예 보내지 않는다.
+  meetingStartTime?: string;
+  meetingEndTime?: string;
 }
 
 export interface StudyListResult {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { applyToStudy, cancelApplication, deleteStudy, getStudy } from "../api/studies";
 import { listTags } from "../api/tags";
 import { getWaitingPosition, joinWaiting, leaveWaiting } from "../api/waiting";
+import { CalendarIcon, ChevronLeftIcon, ClockIcon, UsersIcon } from "../components/icons";
 import { useAuth } from "../context/AuthContext";
 import type { Study, Tag, WaitingPosition } from "../types";
 import { DAY_LABELS } from "../types";
@@ -78,66 +79,103 @@ export function StudyDetailPage() {
   if (loading) return <p className="page-loading">불러오는 중...</p>;
   if (!study) return <p className="empty">스터디를 찾을 수 없습니다.</p>;
 
+  const meetingDaysText = study.meetingDays.length
+    ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ")
+    : "미정";
+  const meetingTimeText =
+    study.meetingStartTime && study.meetingEndTime
+      ? `${study.meetingStartTime} - ${study.meetingEndTime}`
+      : "미정";
+
   return (
-    <div className="page">
-      <div className="card">
-        <div className="page-header">
-          <h1>{study.title}</h1>
-          {isOwner && (
-            <div className="button-row">
-              <Link to={`/studies/${study.id}/edit`} className="button secondary">
-                수정
-              </Link>
-              <Link to={`/studies/${study.id}/applications`} className="button secondary">
-                신청 관리
-              </Link>
-              <button type="button" className="button danger" onClick={handleDelete}>
-                삭제
-              </button>
-            </div>
-          )}
-        </div>
-        <p className="description">{study.description}</p>
-        <div className="tag-picker">
+    <div className="page detail-main">
+      <Link to="/studies" className="back-link">
+        <ChevronLeftIcon size={14} />
+        스터디 목록
+      </Link>
+
+      <div>
+        <div className="tag-picker detail-tags">
           {study.tagIds.map((id) => (
             <span key={id} className="tag-chip">
               #{tagsById.get(id)?.name ?? id}
             </span>
           ))}
         </div>
-        <p className="capacity">
-          정원 {study.memberCount} / {study.capacity}명 · 스터디장 {study.leaderName}
-        </p>
-        <p className="hint">
-          {study.meetingDays.map((day) => DAY_LABELS[day]).join(", ")} {study.meetingStartTime} ~{" "}
-          {study.meetingEndTime}
-        </p>
+        <h1 className="detail-title">{study.title}</h1>
+        <div className="host-row">
+          <span className="avatar avatar-sm">{study.leaderName.charAt(0)}</span>
+          <span className="host-name">{study.leaderName}</span>
+          <span className="host-badge">방장</span>
+        </div>
+      </div>
 
+      <div className="card meta-grid">
+        <div className="meta-cell">
+          <UsersIcon />
+          <div>
+            <div className="meta-label">인원</div>
+            <div className="meta-value">
+              {study.memberCount}/{study.capacity}명
+            </div>
+          </div>
+        </div>
+        <div className="meta-cell">
+          <CalendarIcon />
+          <div>
+            <div className="meta-label">모임 요일</div>
+            <div className="meta-value">{meetingDaysText}</div>
+          </div>
+        </div>
+        <div className="meta-cell">
+          <ClockIcon />
+          <div>
+            <div className="meta-label">시간</div>
+            <div className="meta-value">{meetingTimeText}</div>
+          </div>
+        </div>
+      </div>
+
+      <section className="section-block">
+        <h2 className="section-title">스터디 소개</h2>
+        <p className="desc-text">{study.description}</p>
+      </section>
+
+      <div className="action-bar">
         {!isOwner && user && (
-          <div className="button-row">
+          <>
             {applyState === "NONE" ? (
-              <button type="button" onClick={handleApply} disabled={isFull}>
-                {isFull ? "정원 마감" : "참여 신청"}
+              <button type="button" className="wide" onClick={handleApply} disabled={isFull}>
+                {isFull ? "정원 마감" : "참여 신청하기"}
               </button>
             ) : (
-              <button type="button" className="secondary" onClick={handleCancelApply}>
+              <button type="button" className="wide secondary" onClick={handleCancelApply}>
                 신청 취소
               </button>
             )}
 
             {isFull &&
               (waiting ? (
-                <button type="button" className="secondary" onClick={handleLeaveWaiting}>
+                <button type="button" className="wide secondary" onClick={handleLeaveWaiting}>
                   대기 취소 (내 순번 {waiting.position}/{waiting.totalWaiting})
                 </button>
               ) : (
-                <button type="button" className="secondary" onClick={handleJoinWaiting}>
+                <button type="button" className="wide secondary" onClick={handleJoinWaiting}>
                   빈자리 대기 신청
                 </button>
               ))}
-          </div>
+          </>
         )}
-        {!user && <p className="hint">참여 신청은 로그인 후 이용할 수 있습니다.</p>}
+        {!user && <p className="host-hint">참여 신청은 로그인 후 이용할 수 있습니다.</p>}
+        {isOwner && (
+          <p className="host-hint">
+            방장이신가요? <Link to={`/studies/${study.id}/applications`}>신청자 관리</Link> ·{" "}
+            <Link to={`/studies/${study.id}/edit`}>스터디 수정</Link> ·{" "}
+            <button type="button" className="link-danger" onClick={handleDelete}>
+              삭제
+            </button>
+          </p>
+        )}
         {actionError && <p className="error">{actionError}</p>}
       </div>
     </div>
