@@ -13,6 +13,3 @@ function App() {
 }
 
 export default App;
-
-
-/* test for frontend build 2 */
