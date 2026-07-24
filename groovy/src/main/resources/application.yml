@@ -35,3 +35,17 @@ jwt:
 cors:
   # 프론트 개발 서버(Vite) 기본 포트. 배포 환경 도메인이 추가되면 콤마로 구분해 나열한다.
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        

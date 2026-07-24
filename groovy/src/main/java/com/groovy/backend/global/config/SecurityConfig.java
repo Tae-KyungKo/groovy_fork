@@ -30,7 +30,9 @@ public class SecurityConfig {
 	private static final String[] PERMIT_ALL_PATTERNS = {
 		"/api/auth/signup",
 		"/api/auth/login",
-		"/api/health"
+		"/api/health",
+		"/actuator/health",
+		"/actuator/prometheus"
 	};
 
 	// 스터디 목록/상세 조회, 전체 태그 목록 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
