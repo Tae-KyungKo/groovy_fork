@@ -32,18 +32,25 @@ CREATE TABLE `studies` (
   CONSTRAINT `FKacx7wxxsm81ks66nckkefdf7i` FOREIGN KEY (`leader_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- end_date는 이후 마이그레이션에서 추가되므로 베이스라인에는 포함하지 않는다.
+-- calendars는 26a4523(시간 기반 설계) 이후 4343af3에서 날짜 기반으로 재설계되었지만
+-- ddl-auto=update가 컬럼을 드롭하지 않아 운영 DB에는 그때의 description/end_time/start_time이
+-- NOT NULL인 채로 그대로 남아있다. 베이스라인은 운영의 실제 현재 상태를 그대로 반영한다.
+-- (더 이상 쓰이지 않는 이 세 컬럼은 V2에서 드롭한다.)
 CREATE TABLE `calendars` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) DEFAULT NULL,
   `updated_at` datetime(6) DEFAULT NULL,
-  `date` date NOT NULL,
+  `description` text,
+  `end_time` datetime(6) NOT NULL,
+  `start_time` datetime(6) NOT NULL,
   `title` varchar(255) NOT NULL,
-  `study_id` bigint DEFAULT NULL,
   `user_id` bigint NOT NULL,
+  `end_date` date NOT NULL,
+  `date` date NOT NULL,
+  `study_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK4g8bqpbm4dovnwf8jvs85iqeg` (`study_id`),
   KEY `FK2ef443fpfyuaay9nc09tvhjre` (`user_id`),
+  KEY `FK4g8bqpbm4dovnwf8jvs85iqeg` (`study_id`),
   CONSTRAINT `FK2ef443fpfyuaay9nc09tvhjre` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `FK4g8bqpbm4dovnwf8jvs85iqeg` FOREIGN KEY (`study_id`) REFERENCES `studies` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
