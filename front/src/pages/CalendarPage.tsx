@@ -115,6 +115,12 @@ export function CalendarPage() {
     return { laneByDate, hiddenCountByDate };
   }, [events, gridDays]);
   const todayKey = toDateKey(new Date());
+  const today = new Date();
+  const todayLabel = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
+    WEEKDAYS[today.getDay()]
+  }요일`;
+  const todayEvents = events.filter((ev) => ev.startDate <= todayKey && todayKey <= ev.endDate);
+  const formatMonthDay = (dateKey: string) => dateKey.slice(5).replace("-", ".");
 
   function openModal(dateKey: string) {
     setModalDate(dateKey);
@@ -185,6 +191,7 @@ export function CalendarPage() {
       {loading ? (
         <p className="page-loading">불러오는 중...</p>
       ) : (
+        <div className="calendar-layout">
         <div className="calendar-scroll">
           <div className="calendar-grid">
             {WEEKDAYS.map((day) => (
@@ -257,52 +264,98 @@ export function CalendarPage() {
             })}
           </div>
         </div>
+
+        <aside className="card calendar-side">
+          <h2>오늘 일정</h2>
+          <p className="today-date">{todayLabel}</p>
+          {todayEvents.length === 0 ? (
+            <div className="side-empty">
+              <p className="side-empty-title">오늘은 일정이 없어요</p>
+              <p className="side-empty-desc">달력에서 날짜를 클릭해 일정을 추가해보세요</p>
+            </div>
+          ) : (
+            <ul className="today-list">
+              {todayEvents.map((ev) => {
+                const isStudy = ev.type === "STUDY";
+                return (
+                  <li key={ev.id} className="today-item">
+                    <span className={`today-dot ${isStudy ? "study" : "personal"}`} />
+                    <div className="today-item-body">
+                      <p className="today-item-title">{ev.title}</p>
+                      <p className="today-item-sub">
+                        {isStudy
+                          ? ev.studyTitle
+                          : `${formatMonthDay(ev.startDate)} ~ ${formatMonthDay(ev.endDate)}`}
+                      </p>
+                    </div>
+                    <span className={`today-badge ${isStudy ? "study" : "personal"}`}>
+                      {isStudy ? "스터디" : "개인"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </aside>
+        </div>
       )}
 
       {modalDate && (
-        <Modal
-          title={endDate && endDate !== modalDate ? `${modalDate} ~ ${endDate} 일정 추가` : `${modalDate} 일정 추가`}
-          onClose={closeModal}
-        >
+        <Modal title="새 일정 추가" onClose={closeModal}>
           <form className="form" onSubmit={handleSubmit}>
             <label>
               제목
-              <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
-            </label>
-            <label>
-              종료일
               <input
-                type="date"
-                value={endDate}
-                min={modalDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="일정 제목을 입력해요"
                 required
+                autoFocus
               />
             </label>
-            {endDate && endDate < modalDate && <p className="hint">종료일은 시작일보다 빠를 수 없습니다.</p>}
-            <div className="button-row" role="radiogroup" aria-label="일정 종류">
-              <button
-                type="button"
-                className={scheduleType === "PERSONAL" ? undefined : "secondary"}
-                onClick={() => setScheduleType("PERSONAL")}
-              >
-                개인 일정
-              </button>
-              <button
-                type="button"
-                className={scheduleType === "STUDY" ? undefined : "secondary"}
-                onClick={() => setScheduleType("STUDY")}
-                disabled={studyOptions.length === 0}
-              >
-                스터디 약속
-              </button>
+            <div className="form-grid-2">
+              <label>
+                시작일
+                <span className="date-box">{modalDate.replace(/-/g, ".")}</span>
+              </label>
+              <label>
+                종료일
+                <input
+                  type="date"
+                  value={endDate}
+                  min={modalDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </label>
             </div>
+            {endDate && endDate < modalDate && <p className="error">종료일은 시작일 이후여야 해요</p>}
+            <label>
+              일정 종류
+              <div className="type-row" role="radiogroup" aria-label="일정 종류">
+                <button
+                  type="button"
+                  className={`type-btn${scheduleType === "PERSONAL" ? " active" : ""}`}
+                  onClick={() => setScheduleType("PERSONAL")}
+                >
+                  개인
+                </button>
+                <button
+                  type="button"
+                  className={`type-btn${scheduleType === "STUDY" ? " active" : ""}`}
+                  onClick={() => setScheduleType("STUDY")}
+                  disabled={studyOptions.length === 0}
+                >
+                  스터디
+                </button>
+              </div>
+            </label>
             {scheduleType === "STUDY" &&
               (studyOptions.length === 0 ? (
                 <p className="hint">약속을 등록할 수 있는 스터디가 없습니다.</p>
               ) : (
                 <label>
-                  스터디
+                  스터디 선택
                   <select value={studyId} onChange={(e) => setStudyId(e.target.value)} required>
                     <option value="" disabled>
                       스터디를 선택하세요
@@ -315,14 +368,19 @@ export function CalendarPage() {
                   </select>
                 </label>
               ))}
-            <button
-              type="submit"
-              disabled={
-                submitting || (scheduleType === "STUDY" && !studyId) || (!!endDate && endDate < modalDate)
-              }
-            >
-              {submitting ? "추가 중..." : "일정 추가"}
-            </button>
+            <div className="modal-actions">
+              <button type="button" className="secondary" onClick={closeModal}>
+                취소
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  submitting || (scheduleType === "STUDY" && !studyId) || (!!endDate && endDate < modalDate)
+                }
+              >
+                {submitting ? "추가 중..." : "추가하기"}
+              </button>
+            </div>
           </form>
         </Modal>
       )}

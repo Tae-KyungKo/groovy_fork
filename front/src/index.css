@@ -673,8 +673,128 @@ button.day-chip.active {
   font-weight: 700;
 }
 
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .calendar-scroll {
   overflow-x: auto;
+}
+
+.calendar-side {
+  padding: 20px 20px 16px;
+}
+
+.today-date {
+  font-size: 13px;
+  color: var(--text-assistive);
+  margin: 4px 0 0;
+}
+
+.today-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.today-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-alt);
+}
+
+.today-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.today-dot.study {
+  background: var(--accent);
+}
+
+.today-dot.personal {
+  background: var(--positive-text);
+}
+
+.today-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.today-item-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-item-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.today-badge.study {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.today-badge.personal {
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.side-empty {
+  margin-top: 16px;
+  padding: 28px 16px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--border-strong);
+  text-align: center;
+}
+
+.side-empty-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.side-empty-desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text);
 }
 
 .calendar-grid {
@@ -846,4 +966,72 @@ button.day-chip.active {
 
 .modal-header h2 {
   font-size: 17px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* 읽기 전용 날짜 표시 박스: 입력창과 같은 형태이되 수정 불가임이 드러나게 흐린 글자색 */
+.date-box {
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.type-row {
+  display: flex;
+  gap: 8px;
+}
+
+button.type-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+button.type-btn:hover {
+  background: var(--surface-alt);
+  color: var(--text-h);
+}
+
+button.type-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+button.type-btn.active:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.modal-actions button {
+  padding: 13px;
+  font-size: 15px;
+}
+
+.modal-actions button.secondary {
+  flex: 1;
+}
+
+.modal-actions button[type="submit"] {
+  flex: 2;
 }
