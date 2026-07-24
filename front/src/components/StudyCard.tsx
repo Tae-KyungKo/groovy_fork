@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Study, Tag } from "../types";
+import { DAY_LABELS } from "../types";
+import { formatTime } from "../utils/date";
 
 interface StudyCardProps {
   study: Study;
@@ -8,13 +10,19 @@ interface StudyCardProps {
 }
 
 export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
+  const isFull = study.memberCount >= study.capacity;
+  const scheduleParts = [
+    study.meetingDays.length ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ") : null,
+    study.meetingStartTime && study.meetingEndTime
+      ? `${formatTime(study.meetingStartTime)} - ${formatTime(study.meetingEndTime)}`
+      : null,
+  ].filter(Boolean);
+
   return (
     <Link to={`/studies/${study.id}`} className="study-card">
-      <div className="study-card-top">
-        <h3>{study.title}</h3>
-        {matchScore !== undefined && <span className="match-score">매칭 {matchScore}%</span>}
-      </div>
-      <p className="description">{study.description}</p>
+      <span className={`study-status${isFull ? " full" : ""}`}>
+        {isFull ? "모집마감" : "모집중"}
+      </span>
       <div className="tag-picker">
         {study.tagIds.map((id) => (
           <span key={id} className="tag-chip">
@@ -22,9 +30,19 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
           </span>
         ))}
       </div>
-      <p className="capacity">
-        {study.memberCount} / {study.capacity}명
-      </p>
+      <h3>{study.title}</h3>
+      {matchScore !== undefined && (
+        <span className="match-score">
+          태그 매칭률 {Number.isInteger(matchScore) ? matchScore : matchScore.toFixed(2)}%
+        </span>
+      )}
+      <p className="description">{study.description}</p>
+      <div className="study-card-meta">
+        <span>{scheduleParts.length ? scheduleParts.join(" · ") : "일정 미정"}</span>
+        <span>
+          {study.memberCount}/{study.capacity}명
+        </span>
+      </div>
     </Link>
   );
 }

@@ -87,7 +87,7 @@ export function StudyListPage() {
           <TagPicker tags={tags} selected={selectedTagIds} onToggle={toggleTag} />
           <div className="button-row tag-actions">
             <button type="button" onClick={handleShowMatches} disabled={matching || selectedTagIds.length === 0}>
-              {matching ? "매칭 중..." : "태그 저장하고 매칭 보기"}
+              {matching ? "매칭 중..." : "태그 저장"}
             </button>
             <button
               type="button"
@@ -95,7 +95,7 @@ export function StudyListPage() {
               onClick={handlePreviewMatches}
               disabled={matching || selectedTagIds.length === 0}
             >
-              {matching ? "매칭 중..." : "저장 없이 미리보기"}
+              {matching ? "매칭 중..." : "태그 적용"}
             </button>
             {matches && (
               <button type="button" className="secondary" onClick={clearMatches}>
