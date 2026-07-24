@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { addCalendarEvent, listCalendarEvents, listMyStudyOptions } from "../api/calendars";
 import { Modal } from "../components/Modal";
+import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
 import type { CalendarEvent, CalendarStudyOption } from "../types";
 import { addMonths, buildMonthGrid, startOfMonth, toDateKey } from "../utils/date";
 
@@ -156,14 +157,24 @@ export function CalendarPage() {
       <div className="page-header">
         <h1>캘린더</h1>
         <div className="button-row">
-          <button type="button" className="secondary" onClick={() => setCurrentMonth((m) => addMonths(m, -1))}>
-            &lt;
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="이전 달"
+            onClick={() => setCurrentMonth((m) => addMonths(m, -1))}
+          >
+            <ChevronLeftIcon size={16} />
           </button>
           <span className="strong month-label">
             {currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월
           </span>
-          <button type="button" className="secondary" onClick={() => setCurrentMonth((m) => addMonths(m, 1))}>
-            &gt;
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="다음 달"
+            onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
+          >
+            <ChevronRightIcon size={16} />
           </button>
           <button type="button" className="secondary" onClick={() => setCurrentMonth(startOfMonth(new Date()))}>
             오늘

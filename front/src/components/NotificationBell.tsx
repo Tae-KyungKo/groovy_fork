@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { subscribeNotifications } from "../api/notifications";
 import type { AppNotification } from "../types";
 import { useAuth } from "../context/AuthContext";
+import { BellIcon } from "./icons";
 
 export function NotificationBell() {
   const { user } = useAuth();
@@ -41,7 +42,7 @@ export function NotificationBell() {
         }}
         aria-label="알림"
       >
-        🔔
+        <BellIcon size={19} />
         {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
       </button>
       {open && (

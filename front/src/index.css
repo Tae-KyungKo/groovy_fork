@@ -595,11 +595,14 @@ button.day-chip.active {
 .icon-button {
   background: transparent;
   border: none;
-  font-size: 18px;
   padding: 6px;
   border-radius: 999px;
   position: relative;
   color: var(--text);
+}
+
+.icon-button svg {
+  display: block;
 }
 
 .icon-button:hover {

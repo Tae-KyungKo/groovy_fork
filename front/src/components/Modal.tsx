@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
+import { XIcon } from "./icons";
 
 interface ModalProps {
   title: string;
@@ -22,7 +23,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
         <div className="modal-header">
           <h2>{title}</h2>
           <button type="button" className="icon-button" onClick={onClose} aria-label="닫기">
-            ✕
+            <XIcon />
           </button>
         </div>
         {children}
