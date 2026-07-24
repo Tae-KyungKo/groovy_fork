@@ -7,6 +7,7 @@ import { ChevronLeftIcon } from "../components/icons";
 import { TagPicker } from "../components/TagPicker";
 import type { DayOfWeek, Tag } from "../types";
 import { DAY_LABELS, DAYS_OF_WEEK } from "../types";
+import { formatTime } from "../utils/date";
 
 export function StudyFormPage() {
   const { studyId } = useParams();
@@ -39,8 +40,9 @@ export function StudyFormPage() {
       setCapacity(study.capacity);
       setTagIds(study.tagIds);
       setMeetingDays(study.meetingDays);
-      setMeetingStartTime(study.meetingStartTime ?? "");
-      setMeetingEndTime(study.meetingEndTime ?? "");
+      // time input은 "HH:mm"만 받으므로 백엔드의 "HH:mm:ss"에서 초를 잘라낸다.
+      setMeetingStartTime(study.meetingStartTime ? formatTime(study.meetingStartTime) : "");
+      setMeetingEndTime(study.meetingEndTime ? formatTime(study.meetingEndTime) : "");
       setLoading(false);
     });
   }, [studyId]);

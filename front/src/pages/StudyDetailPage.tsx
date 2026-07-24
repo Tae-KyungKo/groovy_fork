@@ -7,6 +7,7 @@ import { CalendarIcon, ChevronLeftIcon, ClockIcon, UsersIcon } from "../componen
 import { useAuth } from "../context/AuthContext";
 import type { Study, Tag, WaitingPosition } from "../types";
 import { DAY_LABELS } from "../types";
+import { formatTime } from "../utils/date";
 
 type ApplyState = "NONE" | "PENDING";
 
@@ -84,7 +85,7 @@ export function StudyDetailPage() {
     : "미정";
   const meetingTimeText =
     study.meetingStartTime && study.meetingEndTime
-      ? `${study.meetingStartTime} - ${study.meetingEndTime}`
+      ? `${formatTime(study.meetingStartTime)} - ${formatTime(study.meetingEndTime)}`
       : "미정";
 
   return (

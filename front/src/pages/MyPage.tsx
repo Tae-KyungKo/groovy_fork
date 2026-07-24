@@ -7,6 +7,7 @@ import { TagPicker } from "../components/TagPicker";
 import { useAuth } from "../context/AuthContext";
 import type { MyApplication, Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
+import { formatTime } from "../utils/date";
 
 const STATUS_LABELS: Record<MyApplication["status"], string> = {
   PENDING: "승인 대기",
@@ -101,7 +102,7 @@ export function MyPage() {
                   ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ")
                   : null,
                 study.meetingStartTime && study.meetingEndTime
-                  ? `${study.meetingStartTime} - ${study.meetingEndTime}`
+                  ? `${formatTime(study.meetingStartTime)} - ${formatTime(study.meetingEndTime)}`
                   : null,
                 `${study.memberCount}/${study.capacity}명`,
               ]

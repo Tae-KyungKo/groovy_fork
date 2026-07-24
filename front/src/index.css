@@ -743,12 +743,12 @@ button.day-chip.active {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  grid-template-columns: repeat(7, minmax(88px, 1fr));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 14px 14px 8px;
-  min-width: 840px;
+  min-width: 640px;
 }
 
 .calendar-weekday {
@@ -800,8 +800,10 @@ button.day-chip.active {
   align-items: center;
 }
 
-/* 일요일 날짜는 빨간색 (첫 줄 7칸은 요일 헤더 div, 그 뒤 button이 날짜 칸) */
-.calendar-grid > button.calendar-cell:nth-of-type(7n + 1) .calendar-cell-date {
+/* 이번 달 일요일 날짜만 빨간색 (첫 줄 7칸은 요일 헤더 div, 그 뒤 button이 날짜 칸) */
+.calendar-grid
+  > button.calendar-cell:nth-of-type(7n + 1):not(.other-month)
+  .calendar-cell-date {
   color: var(--danger);
 }
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
+import { formatTime } from "../utils/date";
 
 interface StudyCardProps {
   study: Study;
@@ -13,7 +14,7 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
   const scheduleParts = [
     study.meetingDays.length ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ") : null,
     study.meetingStartTime && study.meetingEndTime
-      ? `${study.meetingStartTime} - ${study.meetingEndTime}`
+      ? `${formatTime(study.meetingStartTime)} - ${formatTime(study.meetingEndTime)}`
       : null,
   ].filter(Boolean);
 
