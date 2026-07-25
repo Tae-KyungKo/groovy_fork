@@ -1,6 +1,5 @@
 import { getToken } from "./tokenStore";
 
-export const USE_MOCK = false;
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 interface ApiEnvelope<T> {

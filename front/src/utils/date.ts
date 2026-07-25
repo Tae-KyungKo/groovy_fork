@@ -24,3 +24,8 @@ export function buildMonthGrid(monthStart: Date): Date[] {
     return d;
   });
 }
+
+// 백엔드 LocalTime이 "HH:mm:ss"로 직렬화되어 오므로 화면 표시용 "HH:mm"으로 자른다.
+export function formatTime(time: string): string {
+  return time.slice(0, 5);
+}

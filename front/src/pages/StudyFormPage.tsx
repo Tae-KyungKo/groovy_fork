@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { createStudy, getStudy, updateStudy } from "../api/studies";
 import { listTags } from "../api/tags";
+import { ChevronLeftIcon } from "../components/icons";
 import { TagPicker } from "../components/TagPicker";
 import type { DayOfWeek, Tag } from "../types";
 import { DAY_LABELS, DAYS_OF_WEEK } from "../types";
+import { formatTime } from "../utils/date";
 
 export function StudyFormPage() {
   const { studyId } = useParams();
@@ -24,6 +26,8 @@ export function StudyFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(isEdit);
 
+  const cancelTo = isEdit ? `/studies/${studyId}` : "/studies";
+
   useEffect(() => {
     listTags().then(setTags);
   }, []);
@@ -36,8 +40,9 @@ export function StudyFormPage() {
       setCapacity(study.capacity);
       setTagIds(study.tagIds);
       setMeetingDays(study.meetingDays);
-      setMeetingStartTime(study.meetingStartTime);
-      setMeetingEndTime(study.meetingEndTime);
+      // time input은 "HH:mm"만 받으므로 백엔드의 "HH:mm:ss"에서 초를 잘라낸다.
+      setMeetingStartTime(study.meetingStartTime ? formatTime(study.meetingStartTime) : "");
+      setMeetingEndTime(study.meetingEndTime ? formatTime(study.meetingEndTime) : "");
       setLoading(false);
     });
   }, [studyId]);
@@ -65,8 +70,8 @@ export function StudyFormPage() {
         capacity,
         tagIds,
         meetingDays,
-        meetingStartTime,
-        meetingEndTime,
+        meetingStartTime: meetingStartTime || undefined,
+        meetingEndTime: meetingEndTime || undefined,
       };
       const study = isEdit && studyId
         ? await updateStudy(studyId, payload)
@@ -82,40 +87,61 @@ export function StudyFormPage() {
   if (loading) return <p className="page-loading">불러오는 중...</p>;
 
   return (
-    <div className="page">
-      <form className="card form" onSubmit={handleSubmit}>
-        <h1>{isEdit ? "스터디 수정" : "스터디 만들기"}</h1>
+    <div className="page detail-main">
+      <Link to={cancelTo} className="back-link">
+        <ChevronLeftIcon size={14} />
+        {isEdit ? "스터디로 돌아가기" : "홈으로"}
+      </Link>
+      <h1>{isEdit ? "스터디 수정" : "새 스터디 만들기"}</h1>
+      <form className="card form form-card" onSubmit={handleSubmit}>
         <label>
-          제목
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <span>
+            제목 <em className="req">*</em>
+          </span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="스터디 이름을 입력해요"
+            required
+          />
         </label>
         <label>
-          설명
+          <span>
+            설명 <em className="req">*</em>
+          </span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            placeholder="어떤 스터디인지, 어떻게 진행되는지 소개해요"
             rows={4}
             required
           />
         </label>
+        <div className="form-grid-2">
+          <label>
+            <span>
+              정원 <em className="req">*</em>
+            </span>
+            <input
+              type="number"
+              min={1}
+              value={capacity}
+              onChange={(e) => setCapacity(Number(e.target.value))}
+              required
+            />
+          </label>
+          <div />
+        </div>
         <label>
-          정원
-          <input
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value))}
-            required
-          />
-        </label>
-        <label>
-          모임 요일
+          <span>
+            모임 요일 <em className="opt">(선택)</em>
+          </span>
           <div className="tag-picker">
             {DAYS_OF_WEEK.map((day) => (
               <button
                 key={day}
                 type="button"
-                className={`tag-chip${meetingDays.includes(day) ? " active" : ""}`}
+                className={`day-chip${meetingDays.includes(day) ? " active" : ""}`}
                 onClick={() => toggleDay(day)}
               >
                 {DAY_LABELS[day]}
@@ -123,32 +149,43 @@ export function StudyFormPage() {
             ))}
           </div>
         </label>
+        <div className="form-grid-2">
+          <label>
+            <span>
+              시작 시각 <em className="opt">(선택)</em>
+            </span>
+            <input
+              type="time"
+              value={meetingStartTime}
+              onChange={(e) => setMeetingStartTime(e.target.value)}
+            />
+          </label>
+          <label>
+            <span>
+              종료 시각 <em className="opt">(선택)</em>
+            </span>
+            <input
+              type="time"
+              value={meetingEndTime}
+              onChange={(e) => setMeetingEndTime(e.target.value)}
+            />
+          </label>
+        </div>
         <label>
-          시작 시각
-          <input
-            type="time"
-            value={meetingStartTime}
-            onChange={(e) => setMeetingStartTime(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          종료 시각
-          <input
-            type="time"
-            value={meetingEndTime}
-            onChange={(e) => setMeetingEndTime(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          태그
+          <span>
+            태그 <em className="opt">(선택)</em>
+          </span>
           <TagPicker tags={tags} selected={tagIds} onToggle={toggleTag} />
         </label>
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={submitting}>
-          {submitting ? "저장 중..." : isEdit ? "수정하기" : "만들기"}
-        </button>
+        <div className="form-actions">
+          <button type="button" className="secondary" onClick={() => navigate(cancelTo)}>
+            취소
+          </button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "저장 중..." : isEdit ? "수정하기" : "스터디 만들기"}
+          </button>
+        </div>
       </form>
     </div>
   );
