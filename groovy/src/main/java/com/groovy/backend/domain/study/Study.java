@@ -4,6 +4,9 @@ import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import com.groovy.backend.common.entity.BaseTimeEntity;
 import com.groovy.backend.domain.user.User;
 
@@ -49,7 +52,10 @@ public class Study extends BaseTimeEntity {
 	private Integer capacity;
 
 	// 요일 반복 일정: 프론트가 <input type="time">으로 다루는 시:분만 저장하므로 날짜 없는 LocalTime을 쓴다.
+	// EAGER 컬렉션은 fetch join 없이 로딩되면 엔티티 건수만큼 개별 SELECT가 발생하므로(N+1),
+	// SUBSELECT로 전환해 부모 조회 결과를 서브쿼리로 묶어 한 번에 채운다.
 	@ElementCollection(fetch = FetchType.EAGER)
+	@Fetch(FetchMode.SUBSELECT)
 	@CollectionTable(name = "study_meeting_days", joinColumns = @JoinColumn(name = "study_id"))
 	@Enumerated(EnumType.STRING)
 	@Column(name = "day_of_week", nullable = false)

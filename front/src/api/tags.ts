@@ -1,5 +1,11 @@
-import type { StudyMatch, Tag } from "../types";
+import type { PageResponse, StudyMatch, Tag } from "../types";
 import { apiFetch } from "./client";
+
+export interface StudyMatchResult {
+  matches: StudyMatch[];
+  page: number;
+  totalPages: number;
+}
 
 export async function listTags(): Promise<Tag[]> {
   return apiFetch<Tag[]>("/api/tags");
@@ -19,8 +25,11 @@ export async function saveMyTags(tagIds: number[]): Promise<void> {
 }
 
 // tagIds를 주면 저장 없이 즉석으로 해당 태그 기준 매칭 결과를 미리 볼 수 있다.
-export async function matchStudies(tagIds?: number[]): Promise<StudyMatch[]> {
+export async function matchStudies(tagIds?: number[], page = 0): Promise<StudyMatchResult> {
   const previewTagIds = tagIds && tagIds.length > 0 ? tagIds : undefined;
-  const query = previewTagIds ? `?${previewTagIds.map((id) => `tagIds=${id}`).join("&")}` : "";
-  return apiFetch<StudyMatch[]>(`/api/studies/match${query}`);
+  const params = new URLSearchParams({ page: String(page) });
+  previewTagIds?.forEach((id) => params.append("tagIds", String(id)));
+
+  const result = await apiFetch<PageResponse<StudyMatch>>(`/api/studies/match?${params.toString()}`);
+  return { matches: result.content, page: result.number, totalPages: result.totalPages };
 }

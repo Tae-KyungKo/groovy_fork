@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("demo@groovy.dev");
+  const [email, setEmail] = useState("yourEmail");
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,7 +57,6 @@ export function LoginPage() {
         <p className="hint">
           계정이 없나요? <Link to="/signup">회원가입</Link>
         </p>
-        <p className="hint">데모 계정: demo@groovy.dev / password123</p>
       </form>
     </div>
   );
