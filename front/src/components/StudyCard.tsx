@@ -9,8 +9,12 @@ interface StudyCardProps {
   matchScore?: number;
 }
 
+const MAX_VISIBLE_TAGS = 3;
+
 export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
   const isFull = study.memberCount >= study.capacity;
+  const visibleTagIds = study.tagIds.slice(0, MAX_VISIBLE_TAGS);
+  const hiddenTagCount = study.tagIds.length - visibleTagIds.length;
   const scheduleParts = [
     study.meetingDays.length ? study.meetingDays.map((day) => DAY_LABELS[day]).join(", ") : null,
     study.meetingStartTime && study.meetingEndTime
@@ -24,12 +28,17 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
         {isFull ? "모집마감" : "모집중"}
       </span>
       <div className="tag-picker">
-        {study.tagIds.map((id) => (
+        {visibleTagIds.map((id) => (
           <span key={id} className="tag-chip">
             #{tagsById.get(id)?.name ?? id}
           </span>
         ))}
       </div>
+      {hiddenTagCount > 0 && (
+        <div className="tag-picker tag-picker-summary">
+          <span className="tag-chip">..+{hiddenTagCount}</span>
+        </div>
+      )}
       <h3>{study.title}</h3>
       {matchScore !== undefined && (
         <span className="match-score">
