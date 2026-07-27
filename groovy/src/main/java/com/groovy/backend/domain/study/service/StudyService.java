@@ -1,11 +1,12 @@
 package com.groovy.backend.domain.study.service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import com.groovy.backend.domain.study.dto.StudyUpdateRequest;
 import com.groovy.backend.domain.study.repository.ApplicationRepository;
 import com.groovy.backend.domain.study.repository.ApplicationRepository.StudyMemberCount;
 import com.groovy.backend.domain.study.repository.StudyRepository;
+import com.groovy.backend.domain.tag.repository.StudyTagRepository.StudyMatchCount;
 import com.groovy.backend.domain.tag.service.TagService;
 import com.groovy.backend.domain.user.User;
 import com.groovy.backend.domain.user.repository.UserRepository;
@@ -123,33 +125,53 @@ public class StudyService {
 	/**
 	 * tagIds가 주어지면(즉석 태그 선택) 해당 태그 기준으로, 주어지지 않으면 로그인 유저의 저장된 선호 태그(UserTag)
 	 * 기준으로 스터디별 태그(StudyTag)와 비교하여 일치율이 높은 순으로 정렬한 추천 목록을 반환한다.
+	 *
+	 * 매칭 개수 계산·정렬·페이지네이션을 DB에서 수행해, 스터디 건수가 늘어나도 요청당 처리량은
+	 * 페이지 크기만큼으로 고정된다(스터디 전체를 애플리케이션 메모리로 읽어와 정렬하지 않는다).
 	 */
-	public List<StudyMatchResponse> getMatchedStudies(String email, List<Long> tagIds) {
+	public Page<StudyMatchResponse> getMatchedStudies(String email, List<Long> tagIds, Pageable pageable) {
 		List<Long> targetTagIds = (tagIds != null && !tagIds.isEmpty()) ? tagIds : tagService.getUserTagIds(email);
+		// 매칭 정렬 기준(matchedCount)이 고정이므로, 요청에 딸려온 정렬 조건은 무시하고 페이지 범위만 사용한다.
+		Pageable pageRange = Pageable.ofSize(pageable.getPageSize()).withPage(pageable.getPageNumber());
 
-		List<Study> studies = studyRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
-		List<Long> studyIds = studies.stream().map(Study::getId).toList();
+		if (targetTagIds.isEmpty()) {
+			// 매칭 기준 태그가 없으면 전부 matchScore=0으로 동률이므로, 최신 스터디가 먼저 보이도록 id desc로 정렬한다.
+			Pageable idDescPage = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "id"));
+			Page<Study> studyPage = studyRepository.findAllWithLeader(idDescPage);
+			return buildMatchPage(studyPage, Map.of(), targetTagIds);
+		}
+
+		Page<StudyMatchCount> matchCountPage = tagService.getMatchedStudyIds(targetTagIds, pageRange);
+		List<Long> pageIds = matchCountPage.getContent().stream().map(StudyMatchCount::getStudyId).toList();
+		Map<Long, Long> matchedCountByStudyId = matchCountPage.getContent().stream()
+			.collect(Collectors.toMap(StudyMatchCount::getStudyId, StudyMatchCount::getMatchedCount));
+
+		Map<Long, Study> studyById = studyRepository.findAllWithLeaderByIdIn(pageIds).stream()
+			.collect(Collectors.toMap(Study::getId, study -> study));
+		List<Study> orderedStudies = pageIds.stream().map(studyById::get).toList();
+		Page<Study> studyPage = new PageImpl<>(orderedStudies, pageRange, matchCountPage.getTotalElements());
+
+		return buildMatchPage(studyPage, matchedCountByStudyId, targetTagIds);
+	}
+
+	private Page<StudyMatchResponse> buildMatchPage(Page<Study> studyPage, Map<Long, Long> matchedCountByStudyId, List<Long> targetTagIds) {
+		List<Long> studyIds = studyPage.getContent().stream().map(Study::getId).toList();
 
 		Map<Long, List<Long>> studyTagIdsByStudyId = tagService.getStudyTagIdsGroupedByStudyIds(studyIds);
 		Map<Long, Long> approvedMemberCountByStudyId = getApprovedMemberCounts(studyIds);
 
-		return studies.stream()
-			.map(study -> toMatchResponse(
+		return studyPage.map(study -> {
+			List<Long> studyTagIds = studyTagIdsByStudyId.getOrDefault(study.getId(), List.of());
+			long matchedCount = matchedCountByStudyId.getOrDefault(study.getId(), 0L);
+			double matchScore = targetTagIds.isEmpty() ? 0.0 : matchedCount * 100.0 / targetTagIds.size();
+
+			StudyResponse studyResponse = StudyResponse.from(
 				study,
-				studyTagIdsByStudyId.getOrDefault(study.getId(), List.of()),
-				targetTagIds,
-				resolveMemberCount(approvedMemberCountByStudyId, study.getId())
-			))
-			.sorted(Comparator.comparingDouble(StudyMatchResponse::matchScore).reversed())
-			.toList();
-	}
-
-	private StudyMatchResponse toMatchResponse(Study study, List<Long> studyTagIds, List<Long> targetTagIds, long memberCount) {
-		long matchedCount = studyTagIds.stream().filter(targetTagIds::contains).count();
-		double matchScore = targetTagIds.isEmpty() ? 0.0 : matchedCount * 100.0 / targetTagIds.size();
-
-		StudyResponse studyResponse = StudyResponse.from(study, memberCount, studyTagIds);
-		return StudyMatchResponse.of(studyResponse, matchedCount, matchScore);
+				resolveMemberCount(approvedMemberCountByStudyId, study.getId()),
+				studyTagIds
+			);
+			return StudyMatchResponse.of(studyResponse, matchedCount, matchScore);
+		});
 	}
 
 	private Map<Long, Long> getApprovedMemberCounts(List<Long> studyIds) {

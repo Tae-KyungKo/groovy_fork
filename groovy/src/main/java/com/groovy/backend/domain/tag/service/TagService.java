@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import com.groovy.backend.domain.tag.Tag;
 import com.groovy.backend.domain.tag.UserTag;
 import com.groovy.backend.domain.tag.dto.TagResponse;
 import com.groovy.backend.domain.tag.repository.StudyTagRepository;
+import com.groovy.backend.domain.tag.repository.StudyTagRepository.StudyMatchCount;
 import com.groovy.backend.domain.tag.repository.TagRepository;
 import com.groovy.backend.domain.tag.repository.UserTagRepository;
 import com.groovy.backend.domain.user.User;
@@ -83,6 +86,12 @@ public class TagService {
 		return studyTagRepository.findByStudyId(studyId).stream()
 			.map(studyTag -> studyTag.getTag().getId())
 			.toList();
+	}
+
+	// 태그 매칭 개수 기준 정렬 + 페이지네이션 결과. 정렬 기준(matchedCount)이 고정이라
+	// pageable의 sort는 무시하고 page/size(offset/limit)만 사용해야 한다.
+	public Page<StudyMatchCount> getMatchedStudyIds(List<Long> tagIds, Pageable pageable) {
+		return studyTagRepository.findMatchedStudyIds(tagIds, pageable);
 	}
 
 	public Map<Long, List<Long>> getStudyTagIdsGroupedByStudyIds(List<Long> studyIds) {
