@@ -23,6 +23,21 @@ services:
       timeout: 5s
       retries: 10
 
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: groovy-mysqld-exporter
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command:
+      - "--mysqld.address=mysql:3306"
+      - "--mysqld.username=root"
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    expose:
+      - "9104"
+
   backend:
     image: bebeghi/groovy-backend:latest
     restart: unless-stopped
@@ -120,3 +135,4 @@ volumes:
   groovy-mysql-data:
   groovy-prometheus-data:
   groovy-grafana-data:
+  groovy-loki-data:
