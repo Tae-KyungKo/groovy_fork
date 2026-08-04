@@ -111,6 +111,23 @@ services:
       - groovy-grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: groovy-node-exporter
+    restart: unless-stopped
+    pid: host
+    expose:
+      - "9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+
 volumes:
   groovy-mysql-data:
   groovy-prometheus-data:
