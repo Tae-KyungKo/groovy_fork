@@ -67,14 +67,20 @@ services:
     image: nginx:1.27-alpine
     restart: unless-stopped
     depends_on:
+    # 인증서 생성시 backend 컨테이너는 잠시 중지되어야 하므로 service_healthy 대신 service_started로 변경
       backend:
         condition: service_healthy
       frontend:
         condition: service_started
     ports:
       - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    command: >
+      /bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
@@ -150,6 +156,15 @@ services:
       - loki
     restart: unless-stopped
     
+  certbot:
+    container_name: certbot
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
 
 volumes:
   groovy-mysql-data:
