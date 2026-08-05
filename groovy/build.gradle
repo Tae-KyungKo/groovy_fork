@@ -44,6 +44,9 @@ dependencies {
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// Loki & Alloy로 수집되는 로그를 필드 기반으로 조회할 수 있도록 JSON 구조화
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.security:spring-security-test'
