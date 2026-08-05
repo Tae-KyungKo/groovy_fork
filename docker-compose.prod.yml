@@ -159,7 +159,22 @@ services:
     depends_on:
       - loki
     restart: unless-stopped
-    
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: groovy-node-exporter
+    restart: unless-stopped
+    pid: host
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'   
   certbot:
     container_name: groovy-certbot
     image: certbot/certbot
