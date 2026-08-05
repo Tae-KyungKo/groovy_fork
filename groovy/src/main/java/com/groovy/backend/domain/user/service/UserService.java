@@ -15,7 +15,9 @@ import com.groovy.backend.domain.user.repository.UserRepository;
 import com.groovy.backend.global.auth.jwt.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +30,7 @@ public class UserService {
 	@Transactional
 	public UserResponse signup(SignupRequest request) {
 		if (userRepository.existsByEmail(request.email())) {
+			log.warn("회원가입 실패(이메일 중복): email={}", request.email());
 			throw new IllegalArgumentException("이미 가입된 이메일입니다.");
 		}
 
@@ -39,24 +42,35 @@ public class UserService {
 			.roleType(RoleType.USER)
 			.build();
 
-		return UserResponse.from(userRepository.save(user));
+		User saved = userRepository.save(user);
+		log.info("회원가입 성공: email={}, userId={}", saved.getEmail(), saved.getId());
+
+		return UserResponse.from(saved);
 	}
 
 	public LoginResponse login(LoginRequest request) {
 		User user = userRepository.findByEmail(request.email())
-			.orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다."));
+			.orElseThrow(() -> {
+				log.warn("로그인 실패(존재하지 않는 이메일): email={}", request.email());
+				return new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
+			});
 
 		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+			log.warn("로그인 실패(비밀번호 불일치): email={}", request.email());
 			throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
 		}
 
 		String accessToken = tokenProvider.createToken(user.getEmail(), user.getRoleType());
+		log.info("로그인 성공: email={}, userId={}", user.getEmail(), user.getId());
 		return LoginResponse.of(accessToken);
 	}
 
 	public UserResponse getMyInfo(String email) {
 		User user = userRepository.findByEmail(email)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 유저: email={}", email);
+				return new IllegalArgumentException("존재하지 않는 유저입니다.");
+			});
 
 		return UserResponse.from(user);
 	}

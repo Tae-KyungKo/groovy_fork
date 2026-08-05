@@ -18,7 +18,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class TokenProvider {
 
@@ -37,12 +39,12 @@ public class TokenProvider {
 		Date expiry = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME_MILLIS);
 
 		return Jwts.builder()
-			.subject(email)
-			.claim(ROLE_CLAIM_KEY, role.name())
-			.issuedAt(now)
-			.expiration(expiry)
-			.signWith(key)
-			.compact();
+				.subject(email)
+				.claim(ROLE_CLAIM_KEY, role.name())
+				.issuedAt(now)
+				.expiration(expiry)
+				.signWith(key)
+				.compact();
 	}
 
 	public boolean validateToken(String token) {
@@ -50,6 +52,7 @@ public class TokenProvider {
 			Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
 			return true;
 		} catch (JwtException | IllegalArgumentException e) {
+			log.warn("토큰 검증 실패: {} - {}", e.getClass().getSimpleName(), e.getMessage());
 			return false;
 		}
 	}
