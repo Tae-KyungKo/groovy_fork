@@ -41,4 +41,9 @@ target/
 # 쉘 파일
 *.sh
 
+# 인증서
 data/*
+
+# ===== 선택 (필요에 따라 제외) =====
+nginx copy.conf
+docker-compose.yml.example
