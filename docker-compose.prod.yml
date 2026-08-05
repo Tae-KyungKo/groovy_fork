@@ -1,6 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
+    container_name: groovy-mysql
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -38,6 +39,7 @@ services:
       - "9104"
   backend:
     image: bebeghi/groovy-backend:latest
+    container_name: groovy-backend
     restart: unless-stopped
     depends_on:
       mysql:
@@ -56,6 +58,7 @@ services:
 
   frontend:
     image: bebeghi/groovy-frontend:latest
+    container_name: groovy-frontend
     restart: unless-stopped
     expose:
       - "5173"
@@ -65,6 +68,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
+    container_name: groovy-nginx
     restart: unless-stopped
     depends_on:
     # 인증서 생성시 backend 컨테이너는 잠시 중지되어야 하므로 service_healthy 대신 service_started로 변경
@@ -108,7 +112,7 @@ services:
       - backend
       - cadvisor
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - groovy-prometheus-data:/prometheus
@@ -123,7 +127,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
@@ -136,7 +140,7 @@ services:
     container_name: groovy-loki
     command: -config.file=/etc/loki/local-config.yaml
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT:-3100}:3100"
     volumes:
       - ./monitoring/loki/config.yaml:/etc/loki/local-config.yaml
       - groovy-loki-data:/loki
@@ -151,13 +155,13 @@ services:
       - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "12345:12345"
+      - "${ALLOY_PORT:-12345}:12345"
     depends_on:
       - loki
     restart: unless-stopped
     
   certbot:
-    container_name: certbot
+    container_name: groovy-certbot
     image: certbot/certbot
     restart: unless-stopped
     volumes:

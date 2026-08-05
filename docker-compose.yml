@@ -7,10 +7,10 @@ services:
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
 
-    container_name: groovy-front
+    container_name: groovy-frontend
 
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
 
     depends_on:
       - backend
@@ -86,7 +86,7 @@ services:
       - backend
       - cadvisor
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - groovy-prometheus-data:/prometheus
@@ -101,7 +101,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
