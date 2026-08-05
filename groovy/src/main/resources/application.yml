@@ -30,6 +30,9 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # 없으면 spring-boot 3.0 이상에서 CORS 오류 발생
+  # -> request.isSecure() 같은 게 nginx 뒤에서도 http로 잘못 인식
+  forward-headers-strategy: framework
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
