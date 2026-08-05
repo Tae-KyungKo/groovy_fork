@@ -28,7 +28,9 @@ import com.groovy.backend.domain.user.repository.UserRepository;
 import com.groovy.backend.global.exception.ForbiddenException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -55,6 +57,7 @@ public class StudyService {
 
 		Study savedStudy = studyRepository.save(study);
 		tagService.replaceStudyTags(savedStudy, request.tagIds());
+		log.info("스터디 생성: studyId={}, leaderId={}", savedStudy.getId(), leader.getId());
 
 		// 스터디장은 신청 없이 항상 멤버로 집계되므로, 생성 직후 멤버 수는 1명이다.
 		return StudyResponse.from(savedStudy, 1L, request.tagIds());
@@ -107,6 +110,7 @@ public class StudyService {
 
 		study.update(request.title(), request.description(), request.capacity(), request.meetingDays(), request.meetingStartTime(), request.meetingEndTime());
 		tagService.replaceStudyTags(study, request.tagIds());
+		log.info("스터디 수정: studyId={}, email={}", studyId, email);
 
 		long memberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
 		return StudyResponse.from(study, memberCount, request.tagIds());
@@ -120,6 +124,7 @@ public class StudyService {
 		applicationRepository.deleteAllByStudyId(studyId);
 		tagService.deleteStudyTags(studyId);
 		studyRepository.delete(study);
+		log.info("스터디 삭제: studyId={}, email={}", studyId, email);
 	}
 
 	/**
@@ -131,6 +136,7 @@ public class StudyService {
 	 */
 	public Page<StudyMatchResponse> getMatchedStudies(String email, List<Long> tagIds, Pageable pageable) {
 		List<Long> targetTagIds = (tagIds != null && !tagIds.isEmpty()) ? tagIds : tagService.getUserTagIds(email);
+		log.info("스터디 매칭 조회: email={}, targetTagIds={}", email, targetTagIds);
 		// 매칭 정렬 기준(matchedCount)이 고정이므로, 요청에 딸려온 정렬 조건은 무시하고 페이지 범위만 사용한다.
 		Pageable pageRange = Pageable.ofSize(pageable.getPageSize()).withPage(pageable.getPageNumber());
 
@@ -190,18 +196,25 @@ public class StudyService {
 
 	Study getStudyEntity(Long studyId) {
 		return studyRepository.findById(studyId)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 스터디: studyId={}", studyId);
+				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
+			});
 	}
 
 	void validateLeader(Study study, String email) {
 		User user = getUser(email);
 		if (!study.isLeader(user.getId())) {
+			log.warn("스터디 방장 아님: studyId={}, email={}", study.getId(), email);
 			throw new ForbiddenException("스터디 방장만 수행할 수 있는 작업입니다.");
 		}
 	}
 
 	private User getUser(String email) {
 		return userRepository.findByEmail(email)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 유저: email={}", email);
+				return new IllegalArgumentException("존재하지 않는 유저입니다.");
+			});
 	}
 }

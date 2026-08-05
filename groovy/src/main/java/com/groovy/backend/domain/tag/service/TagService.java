@@ -23,7 +23,9 @@ import com.groovy.backend.domain.user.User;
 import com.groovy.backend.domain.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -57,6 +59,7 @@ public class TagService {
 			.map(tag -> UserTag.builder().user(user).tag(tag).build())
 			.toList();
 		userTagRepository.saveAll(userTags);
+		log.info("유저 관심 태그 변경: email={}, tagIds={}", email, tagIds);
 	}
 
 	@Transactional
@@ -68,11 +71,13 @@ public class TagService {
 			.map(tag -> StudyTag.builder().study(study).tag(tag).build())
 			.toList();
 		studyTagRepository.saveAll(studyTags);
+		log.info("스터디 태그 변경: studyId={}, tagIds={}", study.getId(), tagIds);
 	}
 
 	@Transactional
 	public void deleteStudyTags(Long studyId) {
 		studyTagRepository.deleteAllByStudyId(studyId);
+		log.info("스터디 태그 삭제: studyId={}", studyId);
 	}
 
 	public List<Long> getUserTagIds(String email) {
@@ -113,6 +118,7 @@ public class TagService {
 
 		List<Tag> tags = tagRepository.findAllById(tagIds);
 		if (tags.size() != new HashSet<>(tagIds).size()) {
+			log.warn("존재하지 않는 태그 포함: tagIds={}", tagIds);
 			throw new IllegalArgumentException("존재하지 않는 태그가 포함되어 있습니다.");
 		}
 
@@ -121,6 +127,9 @@ public class TagService {
 
 	private User getUser(String email) {
 		return userRepository.findByEmail(email)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 유저: email={}", email);
+				return new IllegalArgumentException("존재하지 않는 유저입니다.");
+			});
 	}
 }

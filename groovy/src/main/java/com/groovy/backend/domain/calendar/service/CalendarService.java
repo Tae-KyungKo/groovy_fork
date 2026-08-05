@@ -24,7 +24,9 @@ import com.groovy.backend.domain.user.repository.UserRepository;
 import com.groovy.backend.global.exception.ForbiddenException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -43,6 +45,7 @@ public class CalendarService {
 		LocalDate startDate = request.startDate();
 		LocalDate endDate = request.endDate() != null ? request.endDate() : startDate;
 		if (endDate.isBefore(startDate)) {
+			log.warn("잘못된 일정 기간: email={}, startDate={}, endDate={}", email, startDate, endDate);
 			throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
 		}
 
@@ -54,7 +57,10 @@ public class CalendarService {
 			.endDate(endDate)
 			.build();
 
-		return CalendarEventResponse.from(calendarRepository.save(calendar));
+		Calendar saved = calendarRepository.save(calendar);
+		log.info("일정 등록: email={}, studyId={}, calendarId={}", email, request.studyId(), saved.getId());
+
+		return CalendarEventResponse.from(saved);
 	}
 
 	/**
@@ -90,11 +96,15 @@ public class CalendarService {
 		}
 
 		Study study = studyRepository.findById(studyId)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스터디입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 스터디: studyId={}", studyId);
+				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
+			});
 
 		boolean isMember = study.isLeader(user.getId())
 			|| applicationRepository.existsByStudyIdAndApplicantIdAndStatus(studyId, user.getId(), ApplicationStatus.APPROVED);
 		if (!isMember) {
+			log.warn("스터디 멤버 아님: studyId={}, userId={}", studyId, user.getId());
 			throw new ForbiddenException("스터디 멤버만 약속을 등록할 수 있습니다.");
 		}
 
@@ -119,6 +129,9 @@ public class CalendarService {
 
 	private User getUser(String email) {
 		return userRepository.findByEmail(email)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 유저: email={}", email);
+				return new IllegalArgumentException("존재하지 않는 유저입니다.");
+			});
 	}
 }
