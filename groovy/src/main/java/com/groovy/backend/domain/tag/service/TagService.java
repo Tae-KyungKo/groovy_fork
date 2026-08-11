@@ -3,6 +3,7 @@ package com.groovy.backend.domain.tag.service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -49,28 +50,55 @@ public class TagService {
 			.toList();
 	}
 
+	// 겹치는 태그를 delete-all 후 insert-all로 처리하면, 같은 (user_id, tag_id)에 대해
+	// 삭제 대상 row가 아직 남아있는 상태로 새 row를 insert하려다 uk_user_tag 유니크 제약을
+	// 위반할 수 있다(Hibernate가 flush 시 INSERT를 DELETE보다 먼저 실행하기 때문).
+	// 그래서 기존/신규 목록을 비교해 실제로 빠진 것만 삭제, 새로 추가된 것만 삽입한다.
 	@Transactional
 	public void updateUserTags(String email, List<Long> tagIds) {
 		User user = getUser(email);
 		List<Tag> tags = resolveTags(tagIds);
+		Set<Long> newTagIds = tags.stream().map(Tag::getId).collect(Collectors.toSet());
 
-		userTagRepository.deleteAllByUserId(user.getId());
-		List<UserTag> userTags = tags.stream()
+		List<UserTag> existingUserTags = userTagRepository.findByUserId(user.getId());
+		Set<Long> existingTagIds = existingUserTags.stream()
+			.map(userTag -> userTag.getTag().getId())
+			.collect(Collectors.toSet());
+
+		List<UserTag> toRemove = existingUserTags.stream()
+			.filter(userTag -> !newTagIds.contains(userTag.getTag().getId()))
+			.toList();
+		userTagRepository.deleteAll(toRemove);
+
+		List<UserTag> toAdd = tags.stream()
+			.filter(tag -> !existingTagIds.contains(tag.getId()))
 			.map(tag -> UserTag.builder().user(user).tag(tag).build())
 			.toList();
-		userTagRepository.saveAll(userTags);
+		userTagRepository.saveAll(toAdd);
 		log.info("유저 관심 태그 변경: email={}, tagIds={}", email, tagIds);
 	}
 
+	// updateUserTags와 동일한 이유로 diff 기반으로 처리한다.
 	@Transactional
 	public void replaceStudyTags(Study study, List<Long> tagIds) {
 		List<Tag> tags = resolveTags(tagIds);
+		Set<Long> newTagIds = tags.stream().map(Tag::getId).collect(Collectors.toSet());
 
-		studyTagRepository.deleteAllByStudyId(study.getId());
-		List<StudyTag> studyTags = tags.stream()
+		List<StudyTag> existingStudyTags = studyTagRepository.findByStudyId(study.getId());
+		Set<Long> existingTagIds = existingStudyTags.stream()
+			.map(studyTag -> studyTag.getTag().getId())
+			.collect(Collectors.toSet());
+
+		List<StudyTag> toRemove = existingStudyTags.stream()
+			.filter(studyTag -> !newTagIds.contains(studyTag.getTag().getId()))
+			.toList();
+		studyTagRepository.deleteAll(toRemove);
+
+		List<StudyTag> toAdd = tags.stream()
+			.filter(tag -> !existingTagIds.contains(tag.getId()))
 			.map(tag -> StudyTag.builder().study(study).tag(tag).build())
 			.toList();
-		studyTagRepository.saveAll(studyTags);
+		studyTagRepository.saveAll(toAdd);
 		log.info("스터디 태그 변경: studyId={}, tagIds={}", study.getId(), tagIds);
 	}
 
