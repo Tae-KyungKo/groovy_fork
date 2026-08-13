@@ -58,6 +58,9 @@ export interface Study {
   level: number;
   expPoint: number;
   createdAt: string;
+  // 상세조회(getStudy)에서만 실제 값이 채워진다. 목록/매칭 조회에서는 항상 "NONE"/false.
+  myApplicationStatus: ApplicationStatus | "NONE";
+  myWaitlistRegistered: boolean;
 }
 
 export interface StudyMatch {
@@ -76,19 +79,45 @@ export interface PageResponse<T> {
 
 
 export interface CalendarEvent {
+  // 렌더링/React key용 합성 id ("personal-3" | "study-3").
   id: string;
+  // 상세조회·수정·삭제 API 경로에 쓰는 원본 PK.
+  calendarId: string;
   title: string;
+  content: string | null;
   startDate: string;
   endDate: string;
   studyId?: string;
   studyTitle?: string;
   type: "PERSONAL" | "STUDY";
+  // 로그인한 유저가 이 일정을 수정/삭제할 수 있는지(개인 일정은 본인, 스터디 일정은 방장).
+  canManage: boolean;
 }
 
 // 캘린더에서 "스터디 약속" 등록 시 고를 수 있는, 내가 속한(방장이거나 승인된) 스터디 목록.
 export interface CalendarStudyOption {
   studyId: string;
   title: string;
+}
+
+export type NotificationType =
+  | "APPLICATION_RECEIVED"
+  | "APPLICATION_APPROVED"
+  | "APPLICATION_REJECTED"
+  | "STUDY_SCHEDULE_CHANGED"
+  | "WAITLIST_SEAT_OPENED"
+  | "MEMOIR_COMMENT_ADDED"
+  | "MEMOIR_LIKE_ADDED"
+  | "STUDY_LEVEL_UP";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  // 타입마다 가리키는 대상 리소스가 다르다(studies/memoirs 등). type과 조합해서 라우팅한다.
+  targetId: string | null;
+  createdAt: string;
 }
 
 export interface Memoir {

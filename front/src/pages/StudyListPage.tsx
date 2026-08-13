@@ -21,6 +21,7 @@ export function StudyListPage() {
   const [matchTotalPages, setMatchTotalPages] = useState(1);
   const [matching, setMatching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tagError, setTagError] = useState<string | null>(null);
 
   useEffect(() => {
     listTags().then(setTags);
@@ -63,11 +64,15 @@ export function StudyListPage() {
 
   async function handleShowMatches() {
     setMatching(true);
+    setTagError(null);
     try {
       await saveMyTags(selectedTagIds);
-    } finally {
+    } catch (err) {
+      setTagError(err instanceof Error ? err.message : "태그 저장에 실패했습니다.");
       setMatching(false);
+      return;
     }
+    setMatching(false);
     await loadMatches(undefined, 0);
   }
 
@@ -98,6 +103,7 @@ export function StudyListPage() {
         <div className="card">
           <p className="hint">선호 태그를 선택하고 저장하면 매칭도 순으로 볼 수 있습니다.</p>
           <TagPicker tags={tags} selected={selectedTagIds} onToggle={toggleTag} />
+          {tagError && <p className="error">{tagError}</p>}
           <div className="button-row tag-actions">
             <button type="button" onClick={handleShowMatches} disabled={matching || selectedTagIds.length === 0}>
               {matching ? "매칭 중..." : "태그 저장"}

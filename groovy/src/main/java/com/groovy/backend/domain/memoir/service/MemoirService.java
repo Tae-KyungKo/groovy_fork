@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -26,11 +27,13 @@ import com.groovy.backend.domain.memoir.repository.MemoirCommentRepository.Memoi
 import com.groovy.backend.domain.memoir.repository.MemoirLikeRepository;
 import com.groovy.backend.domain.memoir.repository.MemoirLikeRepository.MemoirLikeCount;
 import com.groovy.backend.domain.memoir.repository.MemoirRepository;
+import com.groovy.backend.domain.notification.event.MemoirLikeAddedEvent;
 import com.groovy.backend.domain.study.Application;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.study.repository.ApplicationRepository;
 import com.groovy.backend.domain.study.repository.StudyRepository;
+import com.groovy.backend.domain.study.service.StudyService;
 import com.groovy.backend.domain.user.User;
 import com.groovy.backend.domain.user.repository.UserRepository;
 import com.groovy.backend.global.exception.ForbiddenException;
@@ -54,6 +57,8 @@ public class MemoirService {
 	private final StudyRepository studyRepository;
 	private final ApplicationRepository applicationRepository;
 	private final UserRepository userRepository;
+	private final ApplicationEventPublisher eventPublisher;
+	private final StudyService studyService;
 
 	@Transactional
 	public MemoirResponse createMemoir(String email, MemoirCreateRequest request) {
@@ -68,7 +73,7 @@ public class MemoirService {
 			.build();
 
 		Memoir saved = memoirRepository.save(memoir);
-		study.addExp(MEMOIR_EXP);
+		studyService.addExpAndNotifyLevelUp(study, MEMOIR_EXP);
 		log.info("회고록 작성: memoirId={}, studyId={}, authorId={}", saved.getId(), study.getId(), author.getId());
 
 		return MemoirResponse.from(saved, 0L, 0L, false);
@@ -132,6 +137,12 @@ public class MemoirService {
 		if (!memoirLikeRepository.existsByMemoirIdAndUserId(memoirId, user.getId())) {
 			memoirLikeRepository.save(MemoirLike.builder().memoir(memoir).user(user).build());
 			log.info("회고록 좋아요: memoirId={}, userId={}", memoirId, user.getId());
+
+			// 신규 좋아요일 때만(멱등 재호출 제외), 본인 글에 본인이 누른 좋아요는 알림을 보내지 않는다.
+			if (!memoir.isAuthor(user.getId())) {
+				eventPublisher.publishEvent(new MemoirLikeAddedEvent(
+					memoir.getAuthor().getId(), user.getName(), memoirId, memoir.getTitle()));
+			}
 		}
 
 		long commentCount = memoirCommentRepository.countByMemoirId(memoirId);

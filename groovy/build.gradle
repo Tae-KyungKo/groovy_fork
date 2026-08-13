@@ -31,6 +31,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	// 알림 SSE 인스턴스간 전파(pub/sub) + SSE 구독 티켓 저장용
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// flyway를 위한 의존성 추가
 	implementation 'org.springframework.boot:spring-boot-flyway'
 	implementation 'org.flywaydb:flyway-core'

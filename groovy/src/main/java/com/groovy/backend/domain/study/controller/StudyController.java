@@ -22,6 +22,7 @@ import com.groovy.backend.domain.study.dto.StudyCreateRequest;
 import com.groovy.backend.domain.study.dto.StudyMatchResponse;
 import com.groovy.backend.domain.study.dto.StudyResponse;
 import com.groovy.backend.domain.study.dto.StudyUpdateRequest;
+import com.groovy.backend.domain.study.service.ApplicationService;
 import com.groovy.backend.domain.study.service.StudyService;
 
 import jakarta.validation.Valid;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class StudyController {
 
 	private final StudyService studyService;
+	private final ApplicationService applicationService;
 
 	@PostMapping
 	public ApiResponse<StudyResponse> createStudy(
@@ -50,8 +52,8 @@ public class StudyController {
 	}
 
 	@GetMapping("/{studyId}")
-	public ApiResponse<StudyResponse> getStudy(@PathVariable Long studyId) {
-		return ApiResponse.of("SUCCESS", "스터디 상세 조회에 성공했습니다.", studyService.getStudy(studyId));
+	public ApiResponse<StudyResponse> getStudy(@AuthenticationPrincipal String email, @PathVariable Long studyId) {
+		return ApiResponse.of("SUCCESS", "스터디 상세 조회에 성공했습니다.", studyService.getStudy(email, studyId));
 	}
 
 	// 리터럴 경로("/match")가 "/{studyId}" 변수 경로보다 우선 매칭되므로 순서와 무관하게 안전하다.
@@ -78,5 +80,11 @@ public class StudyController {
 	public ApiResponse<Void> deleteStudy(@AuthenticationPrincipal String email, @PathVariable Long studyId) {
 		studyService.deleteStudy(email, studyId);
 		return ApiResponse.of("SUCCESS", "스터디가 삭제되었습니다.");
+	}
+
+	@DeleteMapping("/{studyId}/membership")
+	public ApiResponse<Void> leave(@AuthenticationPrincipal String email, @PathVariable Long studyId) {
+		applicationService.leave(email, studyId);
+		return ApiResponse.of("SUCCESS", "스터디에서 탈퇴했습니다.");
 	}
 }

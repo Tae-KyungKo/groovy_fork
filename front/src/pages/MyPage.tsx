@@ -21,6 +21,7 @@ export function MyPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [savingTags, setSavingTags] = useState(false);
+  const [tagError, setTagError] = useState<string | null>(null);
 
   const [myStudies, setMyStudies] = useState<Study[]>([]);
   const [applications, setApplications] = useState<MyApplication[]>([]);
@@ -47,8 +48,11 @@ export function MyPage() {
 
   async function handleSaveTags() {
     setSavingTags(true);
+    setTagError(null);
     try {
       await saveMyTags(selectedTagIds);
+    } catch (err) {
+      setTagError(err instanceof Error ? err.message : "태그 저장에 실패했습니다.");
     } finally {
       setSavingTags(false);
     }
@@ -82,6 +86,7 @@ export function MyPage() {
           </button>
         </div>
         <TagPicker tags={tags} selected={selectedTagIds} onToggle={toggleTag} />
+        {tagError && <p className="error">{tagError}</p>}
       </div>
 
       <div className="card">

@@ -183,6 +183,100 @@ a:hover {
   padding: 24px 0;
 }
 
+.page-subtitle {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.notification-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-icon.type-received,
+.notification-icon.type-schedule {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notification-icon.type-approved,
+.notification-icon.type-waitlist {
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.notification-icon.type-rejected {
+  background: var(--surface-alt);
+  color: var(--text-assistive);
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.notification-message {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notification-time {
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  margin-top: 2px;
+}
+
+.notification-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--danger);
+}
+
 .center-text {
   text-align: center;
 }
@@ -612,6 +706,28 @@ button.day-chip.active {
   color: var(--text-h);
 }
 
+.notification-bell {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 .tag-actions {
   margin-top: 14px;
 }
@@ -986,6 +1102,76 @@ button.type-btn.active:hover {
 
 .form-actions button[type="submit"] {
   flex: 2;
+}
+
+/* ---- 일정 상세조회 모달: 일반 폼 모달보다 넓게 써서 제목/내용/메타 구분을 뚜렷하게 한다 ---- */
+
+.modal-lg {
+  max-width: 560px;
+  padding: 32px 34px;
+}
+
+.event-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.event-detail-header .strong {
+  font-size: 19px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.event-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-detail-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.event-detail-content {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-h);
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  /* 내용이 길어도 모달이 계속 늘어나지 않도록, 생성 폼의 textarea처럼 내부 스크롤로 처리한다. */
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.event-detail-content.is-empty {
+  color: var(--text-assistive);
+  font-style: italic;
+}
+
+.event-detail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.event-detail .detail-list dd {
+  display: flex;
+  align-items: center;
+}
+
+.event-detail-substudy {
+  margin-left: 8px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13.5px;
 }
 
 /* ---- 스터디 상세 / 폼 공통 (760px 중앙 정렬) ---- */

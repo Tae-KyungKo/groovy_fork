@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { addCalendarEvent, listCalendarEvents, listMyStudyOptions } from "../api/calendars";
+import {
+  addCalendarEvent,
+  deleteCalendarEvent,
+  listCalendarEvents,
+  listMyStudyOptions,
+  updateCalendarEvent,
+} from "../api/calendars";
 import { Modal } from "../components/Modal";
 import { ChevronLeftIcon, ChevronRightIcon } from "../components/icons";
 import type { CalendarEvent, CalendarStudyOption } from "../types";
@@ -19,6 +25,53 @@ type LaneSlot = CalendarEvent | null;
 interface RowLayout {
   laneByDate: Map<string, LaneSlot[]>;
   hiddenCountByDate: Map<string, number>;
+}
+
+// 날짜 셀 클릭 시 뜨는 모달들. day-choice/day-list는 "그 날짜에 이미 일정이 있을 때"만 거치고,
+// 일정이 없는 날짜를 클릭하면 바로 create로 진입한다(기존 UX 유지).
+type PageModal =
+  | { kind: "day-choice"; dateKey: string; dayEvents: CalendarEvent[] }
+  | { kind: "day-list"; dateKey: string; dayEvents: CalendarEvent[] }
+  | { kind: "create"; dateKey: string }
+  | { kind: "detail"; event: CalendarEvent }
+  | { kind: "edit"; event: CalendarEvent }
+  | null;
+
+function formatMonthDay(dateKey: string) {
+  return dateKey.slice(5).replace("-", ".");
+}
+
+function eventsOnDate(events: CalendarEvent[], dateKey: string): CalendarEvent[] {
+  return events.filter((ev) => ev.startDate <= dateKey && dateKey <= ev.endDate);
+}
+
+// "오늘 일정" 패널과 "일정 보기" 모달에서 공통으로 쓰는 일정 요약 행. 클릭하면 상세 조회로 진입한다.
+function EventListItem({ event, onSelect }: { event: CalendarEvent; onSelect: (event: CalendarEvent) => void }) {
+  const isStudy = event.type === "STUDY";
+  return (
+    <li
+      className="today-item"
+      role="button"
+      tabIndex={0}
+      style={{ cursor: "pointer" }}
+      onClick={() => onSelect(event)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(event);
+        }
+      }}
+    >
+      <span className={`today-dot ${isStudy ? "study" : "personal"}`} />
+      <div className="today-item-body">
+        <p className="today-item-title">{event.title}</p>
+        <p className="today-item-sub">
+          {isStudy ? event.studyTitle : `${formatMonthDay(event.startDate)} ~ ${formatMonthDay(event.endDate)}`}
+        </p>
+      </div>
+      <span className={`today-badge ${isStudy ? "study" : "personal"}`}>{isStudy ? "스터디" : "개인"}</span>
+    </li>
+  );
 }
 
 // 같은 주(일~토) 안에서 겹치는 일정들에게 겹치지 않는 "레인(줄)" 번호를 배정한다.
@@ -82,12 +135,16 @@ export function CalendarPage() {
   const [studyOptions, setStudyOptions] = useState<CalendarStudyOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
-  const [modalDate, setModalDate] = useState<string | null>(null);
+  const [modal, setModal] = useState<PageModal>(null);
   const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  // edit 모드에서만 사용자가 바꿀 수 있다. create 모드의 시작일은 클릭한 날짜(modal.dateKey)로 고정된다.
+  const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [scheduleType, setScheduleType] = useState<ScheduleType>("PERSONAL");
   const [studyId, setStudyId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   useEffect(() => {
     refresh();
@@ -119,40 +176,114 @@ export function CalendarPage() {
   const todayLabel = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
     WEEKDAYS[today.getDay()]
   }요일`;
-  const todayEvents = events.filter((ev) => ev.startDate <= todayKey && todayKey <= ev.endDate);
-  const formatMonthDay = (dateKey: string) => dateKey.slice(5).replace("-", ".");
-
-  function openModal(dateKey: string) {
-    setModalDate(dateKey);
-    setTitle("");
-    setEndDate(dateKey);
-    setScheduleType("PERSONAL");
-    setStudyId("");
-  }
+  const todayEvents = useMemo(() => eventsOnDate(events, todayKey), [events, todayKey]);
 
   function closeModal() {
-    setModalDate(null);
+    setModal(null);
     setTitle("");
+    setContent("");
+    setStartDate("");
     setEndDate("");
     setScheduleType("PERSONAL");
     setStudyId("");
+    setModalError(null);
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!title || !modalDate) return;
+  function openCreateModal(dateKey: string) {
+    setTitle("");
+    setContent("");
+    setEndDate(dateKey);
+    setScheduleType("PERSONAL");
+    setStudyId("");
+    setModalError(null);
+    setModal({ kind: "create", dateKey });
+  }
+
+  // 날짜 셀 클릭: 그 날짜에 이미 일정이 있으면 "일정 보기 / 일정 생성" 선택 모달을,
+  // 없으면 바로 생성 폼을 연다.
+  function openDayCell(dateKey: string) {
+    const dayEvents = eventsOnDate(events, dateKey);
+    if (dayEvents.length === 0) {
+      openCreateModal(dateKey);
+      return;
+    }
+    setModalError(null);
+    setModal({ kind: "day-choice", dateKey, dayEvents });
+  }
+
+  function openDetail(event: CalendarEvent) {
+    setModalError(null);
+    setModal({ kind: "detail", event });
+  }
+
+  function openEdit(event: CalendarEvent) {
+    setTitle(event.title);
+    setContent(event.content ?? "");
+    setStartDate(event.startDate);
+    setEndDate(event.endDate);
+    setModalError(null);
+    setModal({ kind: "edit", event });
+  }
+
+  async function handleCreateSubmit(formEvent: FormEvent) {
+    formEvent.preventDefault();
+    if (modal?.kind !== "create") return;
+    const dateKey = modal.dateKey;
+    if (!title) return;
     if (scheduleType === "STUDY" && !studyId) return;
-    if (endDate && endDate < modalDate) return;
+    if (endDate && endDate < dateKey) return;
     setSubmitting(true);
+    setModalError(null);
     try {
       await addCalendarEvent({
         title,
-        startDate: modalDate,
-        endDate: endDate || modalDate,
+        content: content || undefined,
+        startDate: dateKey,
+        endDate: endDate || dateKey,
         studyId: scheduleType === "STUDY" ? studyId : undefined,
       });
       refresh();
       closeModal();
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : "일정 추가에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleUpdateSubmit(formEvent: FormEvent) {
+    formEvent.preventDefault();
+    if (modal?.kind !== "edit") return;
+    if (!title || !startDate) return;
+    if (endDate && endDate < startDate) return;
+    setSubmitting(true);
+    setModalError(null);
+    try {
+      await updateCalendarEvent(modal.event.calendarId, {
+        title,
+        content: content || undefined,
+        startDate,
+        endDate: endDate || startDate,
+      });
+      refresh();
+      closeModal();
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : "일정 수정에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(event: CalendarEvent) {
+    if (!window.confirm("이 일정을 삭제할까요?")) return;
+    setSubmitting(true);
+    setModalError(null);
+    try {
+      await deleteCalendarEvent(event.calendarId);
+      refresh();
+      closeModal();
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : "일정 삭제에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -212,8 +343,8 @@ export function CalendarPage() {
                   key={dateKey}
                   type="button"
                   className={`calendar-cell${isOtherMonth ? " other-month" : ""}${isToday ? " today" : ""}`}
-                  onClick={() => openModal(dateKey)}
-                  aria-label={`${dateKey} 일정 추가${totalCount ? `, 일정 ${totalCount}건` : ""}`}
+                  onClick={() => openDayCell(dateKey)}
+                  aria-label={`${dateKey} 일정${totalCount ? `, 일정 ${totalCount}건` : " 추가"}`}
                 >
                   <span className="calendar-cell-date">{date.getDate()}</span>
                   <span className="calendar-cell-events">
@@ -253,7 +384,7 @@ export function CalendarPage() {
                             .join(" ")}
                           title={isRange ? `${label} (${event.startDate} ~ ${event.endDate})` : label}
                         >
-                          {showLabel ? label : " "}
+                          {showLabel ? label : " "}
                         </span>
                       );
                     })}
@@ -275,34 +406,108 @@ export function CalendarPage() {
             </div>
           ) : (
             <ul className="today-list">
-              {todayEvents.map((ev) => {
-                const isStudy = ev.type === "STUDY";
-                return (
-                  <li key={ev.id} className="today-item">
-                    <span className={`today-dot ${isStudy ? "study" : "personal"}`} />
-                    <div className="today-item-body">
-                      <p className="today-item-title">{ev.title}</p>
-                      <p className="today-item-sub">
-                        {isStudy
-                          ? ev.studyTitle
-                          : `${formatMonthDay(ev.startDate)} ~ ${formatMonthDay(ev.endDate)}`}
-                      </p>
-                    </div>
-                    <span className={`today-badge ${isStudy ? "study" : "personal"}`}>
-                      {isStudy ? "스터디" : "개인"}
-                    </span>
-                  </li>
-                );
-              })}
+              {todayEvents.map((ev) => (
+                <EventListItem key={ev.id} event={ev} onSelect={openDetail} />
+              ))}
             </ul>
           )}
         </aside>
         </div>
       )}
 
-      {modalDate && (
+      {modal?.kind === "day-choice" && (
+        <Modal title={`${formatMonthDay(modal.dateKey)} 일정`} onClose={closeModal}>
+          <div className="form">
+            <p className="hint">이 날짜에 일정이 {modal.dayEvents.length}건 있어요. 무엇을 할까요?</p>
+            <div className="form-actions">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setModal({ kind: "day-list", dateKey: modal.dateKey, dayEvents: modal.dayEvents })}
+              >
+                일정 보기
+              </button>
+              <button type="button" onClick={() => openCreateModal(modal.dateKey)}>
+                일정 생성
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {modal?.kind === "day-list" && (
+        <Modal title={`${formatMonthDay(modal.dateKey)} 일정 목록`} onClose={closeModal}>
+          <div className="form">
+            <ul className="today-list">
+              {modal.dayEvents.map((ev) => (
+                <EventListItem key={ev.id} event={ev} onSelect={openDetail} />
+              ))}
+            </ul>
+            <div className="form-actions">
+              <button type="button" className="secondary" onClick={() => openCreateModal(modal.dateKey)}>
+                새 일정 생성
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {modal?.kind === "detail" && (
+        <Modal title="일정 상세" onClose={closeModal} className="modal-lg">
+          <div className="event-detail">
+            <div className="event-detail-header">
+              <p className="strong">{modal.event.title}</p>
+            </div>
+
+            <div className="event-detail-field">
+              <span className="event-detail-label">내용</span>
+              <p className={`event-detail-content${modal.event.content ? "" : " is-empty"}`}>
+                {modal.event.content || "내용이 없습니다."}
+              </p>
+            </div>
+
+            <hr className="event-detail-divider" />
+
+            <dl className="detail-list">
+              <dt>일정 종류</dt>
+              <dd>
+                <span className={`today-badge ${modal.event.type === "STUDY" ? "study" : "personal"}`}>
+                  {modal.event.type === "STUDY" ? "스터디" : "개인"}
+                </span>
+                {modal.event.type === "STUDY" && (
+                  <span className="event-detail-substudy">{modal.event.studyTitle}</span>
+                )}
+              </dd>
+              <dt>일정</dt>
+              <dd>
+                {formatMonthDay(modal.event.startDate)} ~ {formatMonthDay(modal.event.endDate)}
+              </dd>
+            </dl>
+
+            {modalError && <p className="error">{modalError}</p>}
+
+            <div className="form-actions">
+              <button type="button" className="secondary" onClick={closeModal}>
+                닫기
+              </button>
+              {modal.event.canManage && (
+                <>
+                  <button type="button" className="secondary" onClick={() => openEdit(modal.event)}>
+                    수정
+                  </button>
+                  <button type="button" disabled={submitting} onClick={() => handleDelete(modal.event)}>
+                    {submitting ? "삭제 중..." : "삭제"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {modal?.kind === "create" && (
         <Modal title="새 일정 추가" onClose={closeModal}>
-          <form className="form" onSubmit={handleSubmit}>
+          <form className="form" onSubmit={handleCreateSubmit}>
             <label>
               제목
               <input
@@ -313,23 +518,32 @@ export function CalendarPage() {
                 autoFocus
               />
             </label>
+            <label>
+              내용
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="일정 내용을 입력해요 (선택)"
+                rows={3}
+              />
+            </label>
             <div className="form-grid-2">
               <label>
                 시작일
-                <span className="date-box">{modalDate.replace(/-/g, ".")}</span>
+                <span className="date-box">{modal.dateKey.replace(/-/g, ".")}</span>
               </label>
               <label>
                 종료일
                 <input
                   type="date"
                   value={endDate}
-                  min={modalDate}
+                  min={modal.dateKey}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
                 />
               </label>
             </div>
-            {endDate && endDate < modalDate && <p className="error">종료일은 시작일 이후여야 해요</p>}
+            {endDate && endDate < modal.dateKey && <p className="error">종료일은 시작일 이후여야 해요</p>}
             <label>
               일정 종류
               <div className="type-row" role="radiogroup" aria-label="일정 종류">
@@ -368,6 +582,7 @@ export function CalendarPage() {
                   </select>
                 </label>
               ))}
+            {modalError && <p className="error">{modalError}</p>}
             <div className="form-actions">
               <button type="button" className="secondary" onClick={closeModal}>
                 취소
@@ -375,10 +590,62 @@ export function CalendarPage() {
               <button
                 type="submit"
                 disabled={
-                  submitting || (scheduleType === "STUDY" && !studyId) || (!!endDate && endDate < modalDate)
+                  submitting || (scheduleType === "STUDY" && !studyId) || (!!endDate && endDate < modal.dateKey)
                 }
               >
                 {submitting ? "추가 중..." : "추가하기"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {modal?.kind === "edit" && (
+        <Modal title="일정 수정" onClose={closeModal}>
+          <form className="form" onSubmit={handleUpdateSubmit}>
+            <label>
+              제목
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="일정 제목을 입력해요"
+                required
+                autoFocus
+              />
+            </label>
+            <label>
+              내용
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="일정 내용을 입력해요 (선택)"
+                rows={3}
+              />
+            </label>
+            <div className="form-grid-2">
+              <label>
+                시작일
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              </label>
+              <label>
+                종료일
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            {endDate && startDate && endDate < startDate && <p className="error">종료일은 시작일 이후여야 해요</p>}
+            {modalError && <p className="error">{modalError}</p>}
+            <div className="form-actions">
+              <button type="button" className="secondary" onClick={closeModal}>
+                취소
+              </button>
+              <button type="submit" disabled={submitting || (!!endDate && !!startDate && endDate < startDate)}>
+                {submitting ? "수정 중..." : "수정하기"}
               </button>
             </div>
           </form>

@@ -10,6 +10,9 @@ public record CalendarCreateRequest(
 	@NotBlank(message = "일정 제목은 필수입니다.")
 	String title,
 
+	// 상세 조회 편의를 위한 본문. 선택 항목이라 null일 수 있다.
+	String content,
+
 	@NotNull(message = "시작일은 필수입니다.")
 	LocalDate startDate,
 

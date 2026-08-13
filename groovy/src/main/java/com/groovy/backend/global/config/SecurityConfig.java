@@ -32,7 +32,10 @@ public class SecurityConfig {
 		"/api/auth/login",
 		"/api/health",
 		"/actuator/health",
-		"/actuator/prometheus"
+		"/actuator/prometheus",
+		// 브라우저 EventSource가 커스텀 헤더(Authorization)를 못 보내므로 여기만 인증 필터를 우회하고,
+		// 신원은 NotificationController가 쿼리파라미터 ticket으로 직접 확인한다.
+		"/api/notifications/subscribe"
 	};
 
 	// 스터디 목록/상세 조회, 전체 태그 목록 조회, 회고록 목록/상세/댓글 목록 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
