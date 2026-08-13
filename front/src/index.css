@@ -393,6 +393,12 @@ button.danger:hover,
   color: inherit;
 }
 
+.study-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .study-status {
   position: absolute;
   top: 20px;
@@ -1289,4 +1295,273 @@ button.small,
   color: var(--text-assistive);
   font-weight: 500;
   font-size: 12.5px;
+}
+
+/* ---- 회고록 ---- */
+.level-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.memoir-tabs {
+  gap: 8px;
+}
+
+.memoir-tabs button {
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+.memoir-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.memoir-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+  color: var(--text-assistive);
+}
+
+.memoir-search input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: var(--text-h);
+  padding: 0;
+}
+
+.memoir-sort {
+  gap: 6px;
+}
+
+.memoir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 20px;
+}
+
+.memoir-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.memoir-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+.memoir-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: inherit;
+  flex: 1;
+}
+
+.memoir-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memoir-preview {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.memoir-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-assistive);
+}
+
+.memoir-card-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.memoir-card-author {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  cursor: pointer;
+}
+
+.like-button:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.like-button.liked {
+  color: var(--danger);
+}
+
+.like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.host-row .like-button {
+  margin-left: 4px;
+  font-size: 14px;
+}
+
+.comment-item {
+  align-items: flex-start;
+}
+
+.comment-content {
+  color: var(--text);
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+.comment-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.comment-form {
+  max-width: none;
+}
+
+.content-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.content-mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.markdown-preview-box {
+  min-height: 260px;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+  overflow-y: auto;
+}
+
+.markdown-body {
+  font-size: 15px;
+  /* 회색(--text)이 아니라 배경과 대비되는 강한 톤(라이트는 검정, 다크는 흰색)으로 표시한다. */
+  color: var(--text-h);
+  line-height: 1.7;
+}
+
+.markdown-body :where(h1, h2, h3) {
+  margin: 20px 0 10px;
+}
+
+.markdown-body p {
+  margin: 0 0 12px;
+}
+
+.markdown-body a {
+  text-decoration: underline;
+}
+
+.markdown-body code {
+  background: var(--surface-alt);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 13.5px;
+}
+
+.markdown-body pre {
+  background: var(--surface-alt);
+  padding: 14px 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  margin: 0 0 12px;
+  padding-left: 14px;
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-assistive);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--surface-alt);
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
 }

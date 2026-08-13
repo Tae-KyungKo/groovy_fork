@@ -19,6 +19,8 @@ public record StudyResponse(
 	List<MeetingDay> meetingDays,
 	LocalTime meetingStartTime,
 	LocalTime meetingEndTime,
+	Integer level,
+	Integer expPoint,
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt
 ) {
@@ -36,6 +38,8 @@ public record StudyResponse(
 			study.getMeetingDays().stream().sorted().toList(),
 			study.getMeetingStartTime(),
 			study.getMeetingEndTime(),
+			study.getLevel(),
+			study.getExpPoint(),
 			study.getCreatedAt(),
 			study.getUpdatedAt()
 		);
