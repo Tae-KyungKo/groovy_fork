@@ -7,7 +7,7 @@ services:
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
 
-    container_name: groovy-alertmanager-frontend
+    container_name: groovy-frontend
 
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
@@ -21,7 +21,7 @@ services:
       context: ./groovy
       dockerfile: Dockerfile
 
-    container_name: groovy-alertmanager-backend
+    container_name: groovy-backend
 
     restart: unless-stopped
 
@@ -49,7 +49,7 @@ services:
   mysql:
     image: mysql:8.0
 
-    container_name: groovy-alertmanager-mysql
+    container_name: groovy-mysql
 
     restart: unless-stopped
 
@@ -59,7 +59,7 @@ services:
       TZ: Asia/Seoul
 
     volumes:
-      - groovy-alertmanager-mysql-data:/var/lib/mysql
+      - groovy-mysql-data:/var/lib/mysql
 
     healthcheck:
       test:
@@ -83,7 +83,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
 
-    container_name: groovy-alertmanager-cadvisor
+    container_name: groovy-cadvisor
 
     restart: unless-stopped
 
@@ -120,7 +120,7 @@ services:
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
-      - groovy-alertmanager-data:/alertmanager
+      - groovy-data:/alertmanager
 
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
@@ -133,7 +133,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
 
-    container_name: groovy-alertmanager-prometheus
+    container_name: groovy-prometheus
 
     restart: unless-stopped
 
@@ -161,7 +161,7 @@ services:
   grafana:
     image: grafana/grafana:latest
 
-    container_name: groovy-alertmanager-grafana
+    container_name: groovy-grafana
 
     restart: unless-stopped
 
@@ -186,7 +186,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
 
-    container_name: groovy-alertmanager-node-exporter
+    container_name: groovy-node-exporter
 
     restart: unless-stopped
 
@@ -212,11 +212,11 @@ services:
 
 networks:
   monitoring:
-    name: groovy-alertmanager-monitoring
+    name: groovy-monitoring
 
 
 volumes:
-  groovy-alertmanager-mysql-data:
+  groovy-mysql-data:
   groovy-prometheus-data:
   groovy-grafana-data:
-  groovy-alertmanager-data:
+  groovy-data:

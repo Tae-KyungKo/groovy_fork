@@ -115,7 +115,7 @@ services:
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
-      - groovy-alertmanager-data:/alertmanager
+      - groovy--data:/alertmanager
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
       - "--storage.path=/alertmanager"
@@ -209,4 +209,4 @@ volumes:
   groovy-prometheus-data:
   groovy-grafana-data:
   groovy-loki-data:
-  groovy-alertmanager-data:
+  groovy--data:
