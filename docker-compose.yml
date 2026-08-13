@@ -1,196 +1,26 @@
-services:
+backend:
+  build:
+    context: ./groovy
+    dockerfile: Dockerfile
 
-  frontend:
-    build:
-      context: ./front
-      dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+  container_name: groovy-backend
 
-    container_name: groovy-alertmanager-frontend
+  restart: unless-stopped
 
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+  depends_on:
+    mysql:
+      condition: service_healthy
 
-    depends_on:
-      - backend
+  ports:
+    - "8080:8080"
 
+  environment:
+    SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/groovy_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    SPRING_DEV_DB_USERNAME: root
+    SPRING_DEV_DB_PASSWORD: root
+    JWT_SECRET_KEY: ${JWT_SECRET_KEY:-groovy_secret_key_1234567890}
+    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+    SERVER_PORT: 8080
 
-  backend:
-    build:
-      context: ./groovy
-      dockerfile: Dockerfile
-
-    container_name: groovy-alertmanager-backend
-
-    restart: unless-stopped
-
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
-
-    environment:
-      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DEV_DB_USERNAME: root
-      SPRING_DEV_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
-      SERVER_PORT: ${SERVER_PORT:-8080}
-      DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-30}
-      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-10}
-
-
-  mysql:
-    image: mysql:8.0
-
-    container_name: groovy-alertmanager-mysql
-
-    restart: unless-stopped
-
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      TZ: Asia/Seoul
-
-    volumes:
-      - groovy-alertmanager-mysql-data:/var/lib/mysql
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-uroot",
-          "-p${MYSQL_ROOT_PASSWORD}"
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
-
-    container_name: groovy-alertmanager-cadvisor
-
-    restart: unless-stopped
-
-    privileged: true
-
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /sys:/sys:ro
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - /var/lib/dbus/machine-id:/etc/machine-id:ro
-
-    expose:
-      - "8080"
-
-
-  alertmanager:
-    image: prom/alertmanager:latest
-
-    container_name: groovy-alertmanager
-
-    restart: unless-stopped
-
-    ports:
-      - "${ALERTMANAGER_PORT:-9093}:9093"
-
-    volumes:
-      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
-      - groovy-alertmanager-data:/alertmanager
-
-    command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--storage.path=/alertmanager"
-
-
-  prometheus:
-    image: prom/prometheus:latest
-
-    container_name: groovy-alertmanager-prometheus
-
-    restart: unless-stopped
-
-    depends_on:
-      - backend
-      - cadvisor
-      - alertmanager
-
-    ports:
-      - "${PROMETHEUS_PORT:-9091}:9090"
-
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
-      - groovy-prometheus-data:/prometheus
-
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-
-
-  grafana:
-    image: grafana/grafana:latest
-
-    container_name: groovy-alertmanager-grafana
-
-    restart: unless-stopped
-
-    depends_on:
-      - prometheus
-
-    ports:
-      - "${GRAFANA_PORT:-3000}:3000"
-
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-
-    volumes:
-      - groovy-grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-
-
-  node-exporter:
-    image: prom/node-exporter:latest
-
-    container_name: groovy-alertmanager-node-exporter
-
-    restart: unless-stopped
-
-    pid: host
-
-    expose:
-      - "9100"
-
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-
-    command:
-      - "--path.procfs=/host/proc"
-      - "--path.sysfs=/host/sys"
-      - "--path.rootfs=/rootfs"
-      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
-
-
-volumes:
-  groovy-alertmanager-mysql-data:
-  groovy-prometheus-data:
-  groovy-grafana-data:
-  groovy-alertmanager-data:
+  networks:
+    - groovy_network
