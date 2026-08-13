@@ -12,13 +12,13 @@ import com.groovy.backend.domain.study.ApplicationStatus;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-	boolean existsByStudyIdAndApplicantId(Long studyId, Long applicantId);
-
 	boolean existsByStudyIdAndApplicantIdAndStatus(Long studyId, Long applicantId, ApplicationStatus status);
 
 	Optional<Application> findByStudyIdAndApplicantId(Long studyId, Long applicantId);
 
 	List<Application> findByStudyId(Long studyId);
+
+	List<Application> findByStudyIdAndStatus(Long studyId, ApplicationStatus status);
 
 	List<Application> findByApplicantIdAndStatus(Long applicantId, ApplicationStatus status);
 

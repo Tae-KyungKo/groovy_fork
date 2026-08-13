@@ -183,6 +183,100 @@ a:hover {
   padding: 24px 0;
 }
 
+.page-subtitle {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.notification-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-icon.type-received,
+.notification-icon.type-schedule {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notification-icon.type-approved,
+.notification-icon.type-waitlist {
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.notification-icon.type-rejected {
+  background: var(--surface-alt);
+  color: var(--text-assistive);
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.notification-message {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notification-time {
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  margin-top: 2px;
+}
+
+.notification-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--danger);
+}
+
 .center-text {
   text-align: center;
 }
@@ -391,6 +485,12 @@ button.danger:hover,
   transform: translateY(-4px);
   box-shadow: var(--shadow);
   color: inherit;
+}
+
+.study-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .study-status {
@@ -604,6 +704,28 @@ button.day-chip.active {
 .icon-button:hover {
   background: var(--surface-alt);
   color: var(--text-h);
+}
+
+.notification-bell {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .tag-actions {
@@ -982,6 +1104,76 @@ button.type-btn.active:hover {
   flex: 2;
 }
 
+/* ---- 일정 상세조회 모달: 일반 폼 모달보다 넓게 써서 제목/내용/메타 구분을 뚜렷하게 한다 ---- */
+
+.modal-lg {
+  max-width: 560px;
+  padding: 32px 34px;
+}
+
+.event-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.event-detail-header .strong {
+  font-size: 19px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.event-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-detail-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.event-detail-content {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-h);
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  /* 내용이 길어도 모달이 계속 늘어나지 않도록, 생성 폼의 textarea처럼 내부 스크롤로 처리한다. */
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.event-detail-content.is-empty {
+  color: var(--text-assistive);
+  font-style: italic;
+}
+
+.event-detail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.event-detail .detail-list dd {
+  display: flex;
+  align-items: center;
+}
+
+.event-detail-substudy {
+  margin-left: 8px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
 /* ---- 스터디 상세 / 폼 공통 (760px 중앙 정렬) ---- */
 
 .detail-main {
@@ -1289,4 +1481,273 @@ button.small,
   color: var(--text-assistive);
   font-weight: 500;
   font-size: 12.5px;
+}
+
+/* ---- 회고록 ---- */
+.level-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.memoir-tabs {
+  gap: 8px;
+}
+
+.memoir-tabs button {
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+.memoir-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.memoir-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+  color: var(--text-assistive);
+}
+
+.memoir-search input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: var(--text-h);
+  padding: 0;
+}
+
+.memoir-sort {
+  gap: 6px;
+}
+
+.memoir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 20px;
+}
+
+.memoir-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.memoir-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+.memoir-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: inherit;
+  flex: 1;
+}
+
+.memoir-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memoir-preview {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.memoir-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-assistive);
+}
+
+.memoir-card-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.memoir-card-author {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  cursor: pointer;
+}
+
+.like-button:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.like-button.liked {
+  color: var(--danger);
+}
+
+.like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.host-row .like-button {
+  margin-left: 4px;
+  font-size: 14px;
+}
+
+.comment-item {
+  align-items: flex-start;
+}
+
+.comment-content {
+  color: var(--text);
+  margin: 4px 0;
+  white-space: pre-wrap;
+}
+
+.comment-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.comment-form {
+  max-width: none;
+}
+
+.content-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.content-mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.markdown-preview-box {
+  min-height: 260px;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-alt);
+  overflow-y: auto;
+}
+
+.markdown-body {
+  font-size: 15px;
+  /* 회색(--text)이 아니라 배경과 대비되는 강한 톤(라이트는 검정, 다크는 흰색)으로 표시한다. */
+  color: var(--text-h);
+  line-height: 1.7;
+}
+
+.markdown-body :where(h1, h2, h3) {
+  margin: 20px 0 10px;
+}
+
+.markdown-body p {
+  margin: 0 0 12px;
+}
+
+.markdown-body a {
+  text-decoration: underline;
+}
+
+.markdown-body code {
+  background: var(--surface-alt);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 13.5px;
+}
+
+.markdown-body pre {
+  background: var(--surface-alt);
+  padding: 14px 16px;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  margin: 0 0 12px;
+  padding-left: 14px;
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-assistive);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--surface-alt);
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
 }

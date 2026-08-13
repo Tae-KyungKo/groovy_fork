@@ -42,6 +42,9 @@ public class Calendar extends BaseTimeEntity {
 	@Column(nullable = false)
 	private String title;
 
+	@Column(columnDefinition = "TEXT")
+	private String content;
+
 	// 캘린더 UI가 날짜 단위 그리드(월간 뷰)로만 일정을 다루므로 시간 없이 날짜만 저장한다.
 	// DB 컬럼명은 과거 단일 날짜 시절의 "date"를 그대로 쓰되, 의미상 기간의 시작일이다.
 	@Column(name = "date", nullable = false)
@@ -51,10 +54,18 @@ public class Calendar extends BaseTimeEntity {
 	private LocalDate endDate;
 
 	@Builder
-	public Calendar(User user, Study study, String title, LocalDate startDate, LocalDate endDate) {
+	public Calendar(User user, Study study, String title, String content, LocalDate startDate, LocalDate endDate) {
 		this.user = user;
 		this.study = study;
 		this.title = title;
+		this.content = content;
+		this.startDate = startDate;
+		this.endDate = endDate;
+	}
+
+	public void update(String title, String content, LocalDate startDate, LocalDate endDate) {
+		this.title = title;
+		this.content = content;
 		this.startDate = startDate;
 		this.endDate = endDate;
 	}

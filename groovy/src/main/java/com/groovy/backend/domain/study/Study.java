@@ -34,6 +34,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Study extends BaseTimeEntity {
 
+	// 회고록/댓글 작성 시 이 값만큼 경험치가 누적되고, EXP_PER_LEVEL마다 레벨이 오른다.
+	private static final int EXP_PER_LEVEL = 100;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -67,6 +70,12 @@ public class Study extends BaseTimeEntity {
 	@Column
 	private LocalTime meetingEndTime;
 
+	@Column(nullable = false)
+	private Integer level = 1;
+
+	@Column(name = "exp_point", nullable = false)
+	private Integer expPoint = 0;
+
 	@Builder
 	public Study(String title, String description, User leader, Integer capacity, Set<MeetingDay> meetingDays, LocalTime meetingStartTime, LocalTime meetingEndTime) {
 		this.title = title;
@@ -92,5 +101,13 @@ public class Study extends BaseTimeEntity {
 
 	public boolean isLeader(Long userId) {
 		return this.leader.getId().equals(userId);
+	}
+
+	// 레벨이 실제로 올랐는지(호출한 쪽이 레벨업 알림을 보낼지 판단할 수 있도록)를 반환한다.
+	public boolean addExp(int amount) {
+		int previousLevel = this.level;
+		this.expPoint += amount;
+		this.level = this.expPoint / EXP_PER_LEVEL + 1;
+		return this.level > previousLevel;
 	}
 }

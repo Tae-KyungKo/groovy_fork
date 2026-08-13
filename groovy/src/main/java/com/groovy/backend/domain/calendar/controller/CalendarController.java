@@ -3,8 +3,11 @@ package com.groovy.backend.domain.calendar.controller;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.groovy.backend.common.response.ApiResponse;
 import com.groovy.backend.domain.calendar.dto.CalendarCreateRequest;
 import com.groovy.backend.domain.calendar.dto.CalendarEventResponse;
+import com.groovy.backend.domain.calendar.dto.CalendarUpdateRequest;
 import com.groovy.backend.domain.calendar.dto.MyStudyOptionResponse;
 import com.groovy.backend.domain.calendar.service.CalendarService;
 
@@ -42,5 +46,25 @@ public class CalendarController {
 		@Valid @RequestBody CalendarCreateRequest request
 	) {
 		return ApiResponse.of("SUCCESS", "일정이 추가되었습니다.", calendarService.addSchedule(email, request));
+	}
+
+	@GetMapping("/{id}")
+	public ApiResponse<CalendarEventResponse> getCalendar(@AuthenticationPrincipal String email, @PathVariable Long id) {
+		return ApiResponse.of("SUCCESS", "일정 상세 조회에 성공했습니다.", calendarService.getSchedule(email, id));
+	}
+
+	@PutMapping("/{id}")
+	public ApiResponse<CalendarEventResponse> updateCalendar(
+		@AuthenticationPrincipal String email,
+		@PathVariable Long id,
+		@Valid @RequestBody CalendarUpdateRequest request
+	) {
+		return ApiResponse.of("SUCCESS", "일정이 수정되었습니다.", calendarService.updateSchedule(email, id, request));
+	}
+
+	@DeleteMapping("/{id}")
+	public ApiResponse<Void> deleteCalendar(@AuthenticationPrincipal String email, @PathVariable Long id) {
+		calendarService.deleteSchedule(email, id);
+		return ApiResponse.of("SUCCESS", "일정이 삭제되었습니다.");
 	}
 }

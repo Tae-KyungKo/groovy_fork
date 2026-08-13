@@ -23,6 +23,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: groovy-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   mysqld-exporter:
     image: prom/mysqld-exporter:latest
@@ -46,8 +57,10 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
       SPRING_DEV_DB_USERNAME: root
       SPRING_DEV_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
@@ -55,6 +68,11 @@ services:
       SERVER_PORT: 8080
       DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-30}
       DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-10}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # mysql 컨테이너만 Asia/Seoul이고 backend는 기본값(UTC)이라, LocalDateTime.now() 기반
+      # 타임스탬프(알림 생성시각 등)가 실제 시각보다 9시간 늦게 찍히던 문제의 원인이었다.
+      TZ: Asia/Seoul
     expose:
       - "8080"
 
