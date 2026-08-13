@@ -1,0 +1,29 @@
+groups:
+  - name: groovy-hikaricp-alerts
+    rules:
+    - alert: HikariCpuPoolPendingDetected
+      expr: 1
+      for: 10s
+      labels:
+        severity: critical
+      annotations:
+        summary: "HikariCP Pool Pending Detected!"
+        description: "Severe connection delay on backend database."
+
+    - alert: BackendMemoryUsageTooHigh
+      expr: 1
+      for: 10s
+      labels:
+        severity: warning
+      annotations:
+        summary: "Backend Memory Usage Over 90%!"
+        description: "JVM Heap Memory is almost full."
+
+    - alert: BackendCpuSpikeDetected
+      expr: 1
+      for: 10s
+      labels:
+        severity: warning
+      annotations:
+        summary: "Backend CPU Spike Over 95%!"
+        description: "High CPU utilization on backend container."
