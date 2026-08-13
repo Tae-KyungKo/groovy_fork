@@ -49,6 +49,7 @@ services:
       MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     expose:
       - "9104"
+
   backend:
     image: bebeghi/groovy-backend:latest
     container_name: groovy-backend
@@ -84,13 +85,13 @@ services:
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
-
   nginx:
     image: nginx:1.27-alpine
     container_name: groovy-nginx
     restart: unless-stopped
     depends_on:
-    # 인증서 생성시 backend 컨테이너는 잠시 중지되어야 하므로 service_healthy 대신 service_started로 변경
+      # 인증서 생성시 backend 컨테이너는 잠시 중지되어야 하므로
+      # service_healthy 대신 service_started로 변경
       backend:
         condition: service_healthy
       frontend:
@@ -123,6 +124,20 @@ services:
     expose:
       - "8080"
 
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: groovy-alertmanager
+    restart: unless-stopped
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
+      - groovy--data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+
   prometheus:
     image: prom/prometheus:latest
     container_name: groovy-prometheus
@@ -130,10 +145,12 @@ services:
     depends_on:
       - backend
       - cadvisor
+      - alertmanager
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
       - groovy-prometheus-data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -164,7 +181,6 @@ services:
       - ./monitoring/loki/config.yaml:/etc/loki/local-config.yaml
       - groovy-loki-data:/loki
     restart: unless-stopped
-    
 
   alloy:
     image: grafana/alloy:v1.1.1
@@ -178,6 +194,7 @@ services:
     depends_on:
       - loki
     restart: unless-stopped
+
   node-exporter:
     image: prom/node-exporter:latest
     container_name: groovy-node-exporter
@@ -193,7 +210,8 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'   
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+
   certbot:
     container_name: groovy-certbot
     image: certbot/certbot
@@ -209,3 +227,4 @@ volumes:
   groovy-prometheus-data:
   groovy-grafana-data:
   groovy-loki-data:
+  groovy--data:
