@@ -982,6 +982,76 @@ button.type-btn.active:hover {
   flex: 2;
 }
 
+/* ---- 일정 상세조회 모달: 일반 폼 모달보다 넓게 써서 제목/내용/메타 구분을 뚜렷하게 한다 ---- */
+
+.modal-lg {
+  max-width: 560px;
+  padding: 32px 34px;
+}
+
+.event-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.event-detail-header .strong {
+  font-size: 19px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.event-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-detail-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.event-detail-content {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-h);
+  font-size: 14.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  /* 내용이 길어도 모달이 계속 늘어나지 않도록, 생성 폼의 textarea처럼 내부 스크롤로 처리한다. */
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.event-detail-content.is-empty {
+  color: var(--text-assistive);
+  font-style: italic;
+}
+
+.event-detail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.event-detail .detail-list dd {
+  display: flex;
+  align-items: center;
+}
+
+.event-detail-substudy {
+  margin-left: 8px;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
 /* ---- 스터디 상세 / 폼 공통 (760px 중앙 정렬) ---- */
 
 .detail-main {
