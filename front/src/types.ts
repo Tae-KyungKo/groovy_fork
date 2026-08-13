@@ -105,14 +105,18 @@ export type NotificationType =
   | "APPLICATION_APPROVED"
   | "APPLICATION_REJECTED"
   | "STUDY_SCHEDULE_CHANGED"
-  | "WAITLIST_SEAT_OPENED";
+  | "WAITLIST_SEAT_OPENED"
+  | "MEMOIR_COMMENT_ADDED"
+  | "MEMOIR_LIKE_ADDED"
+  | "STUDY_LEVEL_UP";
 
 export interface Notification {
   id: string;
   type: NotificationType;
   title: string;
   message: string;
-  targetStudyId: string | null;
+  // 타입마다 가리키는 대상 리소스가 다르다(studies/memoirs 등). type과 조합해서 라우팅한다.
+  targetId: string | null;
   createdAt: string;
 }
 

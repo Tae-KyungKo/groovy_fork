@@ -1,5 +1,6 @@
 package com.groovy.backend.domain.study.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groovy.backend.domain.notification.event.StudyLevelUpEvent;
 import com.groovy.backend.domain.notification.event.WaitlistSeatOpenedEvent;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
@@ -150,6 +152,30 @@ public class StudyService {
 
 		long memberCount = approvedCount + 1;
 		return StudyResponse.from(study, memberCount, request.tagIds());
+	}
+
+	// 회고록/댓글 작성 등 스터디 경험치가 쌓이는 모든 지점에서 이 메서드를 통해 exp를 올린다.
+	// 레벨업 여부 판단 + 멤버 전원 조회 + 알림 발행을 한 곳에서 처리해, 호출부(MemoirService,
+	// MemoirCommentService)가 이 로직을 중복해서 갖지 않게 한다.
+	@Transactional
+	public void addExpAndNotifyLevelUp(Study study, int expAmount) {
+		boolean leveledUp = study.addExp(expAmount);
+		if (!leveledUp) {
+			return;
+		}
+
+		List<Long> memberUserIds = getMemberUserIds(study);
+		log.info("스터디 레벨업: studyId={}, newLevel={}", study.getId(), study.getLevel());
+		eventPublisher.publishEvent(new StudyLevelUpEvent(memberUserIds, study.getId(), study.getTitle(), study.getLevel()));
+	}
+
+	// 방장 + 승인된 멤버 전원의 유저 id 목록(레벨업 등 스터디 전체 알림 대상 조회용).
+	private List<Long> getMemberUserIds(Study study) {
+		List<Long> memberUserIds = new ArrayList<>();
+		memberUserIds.add(study.getLeader().getId());
+		applicationRepository.findByStudyIdAndStatus(study.getId(), ApplicationStatus.APPROVED)
+			.forEach(application -> memberUserIds.add(application.getApplicant().getId()));
+		return memberUserIds;
 	}
 
 	@Transactional

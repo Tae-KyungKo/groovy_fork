@@ -8,6 +8,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.groovy.backend.domain.notification.NotificationType;
 import com.groovy.backend.domain.notification.event.ApplicationDecidedEvent;
 import com.groovy.backend.domain.notification.event.ApplicationSubmittedEvent;
+import com.groovy.backend.domain.notification.event.MemoirCommentAddedEvent;
+import com.groovy.backend.domain.notification.event.MemoirLikeAddedEvent;
+import com.groovy.backend.domain.notification.event.StudyLevelUpEvent;
 import com.groovy.backend.domain.notification.event.StudyScheduleChangedEvent;
 import com.groovy.backend.domain.notification.event.WaitlistSeatOpenedEvent;
 
@@ -92,6 +95,44 @@ public class NotificationEventListener {
 				NotificationType.WAITLIST_SEAT_OPENED,
 				"빈자리가 생겼어요",
 				"\"%s\"에 빈자리가 생겼어요. 지금 신청해보세요.".formatted(event.studyTitle()),
+				event.studyId()
+			);
+		}
+	}
+
+	@Async("notificationTaskExecutor")
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void onMemoirCommentAdded(MemoirCommentAddedEvent event) {
+		notificationService.createAndPublish(
+			event.recipientUserId(),
+			NotificationType.MEMOIR_COMMENT_ADDED,
+			"새로운 댓글이 달렸습니다",
+			"%s님이 \"%s\"에 댓글을 남겼어요.".formatted(event.commenterName(), event.memoirTitle()),
+			event.memoirId()
+		);
+	}
+
+	@Async("notificationTaskExecutor")
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void onMemoirLikeAdded(MemoirLikeAddedEvent event) {
+		notificationService.createAndPublish(
+			event.recipientUserId(),
+			NotificationType.MEMOIR_LIKE_ADDED,
+			"회고록에 좋아요가 눌렸어요",
+			"%s님이 \"%s\"을(를) 좋아해요.".formatted(event.likerName(), event.memoirTitle()),
+			event.memoirId()
+		);
+	}
+
+	@Async("notificationTaskExecutor")
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void onStudyLevelUp(StudyLevelUpEvent event) {
+		for (Long recipientUserId : event.recipientUserIds()) {
+			notificationService.createAndPublish(
+				recipientUserId,
+				NotificationType.STUDY_LEVEL_UP,
+				"스터디 레벨이 올랐어요",
+				"\"%s\"이(가) 레벨 %d이 됐어요!".formatted(event.studyTitle(), event.newLevel()),
 				event.studyId()
 			);
 		}

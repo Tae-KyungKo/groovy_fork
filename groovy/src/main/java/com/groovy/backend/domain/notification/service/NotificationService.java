@@ -47,7 +47,7 @@ public class NotificationService {
 	// --- 알림 생성(NotificationEventListener 전용) ---
 
 	@Transactional
-	public void createAndPublish(Long recipientUserId, NotificationType type, String title, String message, Long targetStudyId) {
+	public void createAndPublish(Long recipientUserId, NotificationType type, String title, String message, Long targetId) {
 		User recipient = userRepository.findById(recipientUserId).orElse(null);
 		if (recipient == null) {
 			log.warn("존재하지 않는 알림 수신자: recipientUserId={}", recipientUserId);
@@ -59,7 +59,7 @@ public class NotificationService {
 			.type(type)
 			.title(title)
 			.message(message)
-			.targetStudyId(targetStudyId)
+			.targetId(targetId)
 			.build());
 
 		publishToRedis(recipientUserId, NotificationResponse.from(notification));

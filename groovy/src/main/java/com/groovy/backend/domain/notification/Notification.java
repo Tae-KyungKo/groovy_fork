@@ -43,20 +43,21 @@ public class Notification extends BaseTimeEntity {
 	@Column(nullable = false, length = 500)
 	private String message;
 
-	// 클릭 시 이동할 스터디. 타입에 따라 대상 페이지가 다르므로 프론트가 type과 함께 조합해서 라우팅한다.
-	@Column(name = "target_study_id")
-	private Long targetStudyId;
+	// 클릭 시 이동할 대상(스터디/회고록 등)의 id. 타입에 따라 대상 페이지가 다르므로
+	// 프론트가 type과 함께 조합해서 라우팅한다.
+	@Column(name = "target_id")
+	private Long targetId;
 
 	@Column(name = "is_read", nullable = false)
 	private boolean read;
 
 	@Builder
-	public Notification(User recipient, NotificationType type, String title, String message, Long targetStudyId) {
+	public Notification(User recipient, NotificationType type, String title, String message, Long targetId) {
 		this.recipient = recipient;
 		this.type = type;
 		this.title = title;
 		this.message = message;
-		this.targetStudyId = targetStudyId;
+		this.targetId = targetId;
 		this.read = false;
 	}
 

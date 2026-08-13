@@ -8,7 +8,7 @@ public record NotificationResponse(
 	NotificationType type,
 	String title,
 	String message,
-	String targetStudyId,
+	String targetId,
 	String createdAt
 ) {
 
@@ -18,7 +18,7 @@ public record NotificationResponse(
 			notification.getType(),
 			notification.getTitle(),
 			notification.getMessage(),
-			notification.getTargetStudyId() != null ? String.valueOf(notification.getTargetStudyId()) : null,
+			notification.getTargetId() != null ? String.valueOf(notification.getTargetId()) : null,
 			notification.getCreatedAt().toString()
 		);
 	}

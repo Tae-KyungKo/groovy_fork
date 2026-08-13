@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { BellIcon, CalendarIcon, CheckIcon, UsersIcon, XIcon } from "../components/icons";
+import { BellIcon, CalendarIcon, CheckIcon, CommentIcon, HeartIcon, StarIcon, UsersIcon, XIcon } from "../components/icons";
 import { useNotifications } from "../context/NotificationContext";
 import type { Notification, NotificationType } from "../types";
 import { formatRelativeTime } from "../utils/date";
@@ -10,18 +10,25 @@ const ICON_BY_TYPE: Record<NotificationType, { Icon: typeof BellIcon; className:
   APPLICATION_REJECTED: { Icon: XIcon, className: "type-rejected" },
   STUDY_SCHEDULE_CHANGED: { Icon: CalendarIcon, className: "type-schedule" },
   WAITLIST_SEAT_OPENED: { Icon: BellIcon, className: "type-waitlist" },
+  MEMOIR_COMMENT_ADDED: { Icon: CommentIcon, className: "type-received" },
+  MEMOIR_LIKE_ADDED: { Icon: HeartIcon, className: "type-approved" },
+  STUDY_LEVEL_UP: { Icon: StarIcon, className: "type-waitlist" },
 };
 
 function resolveTarget(notification: Notification): string | null {
   switch (notification.type) {
     case "APPLICATION_RECEIVED":
-      return notification.targetStudyId ? `/studies/${notification.targetStudyId}/applications` : null;
+      return notification.targetId ? `/studies/${notification.targetId}/applications` : null;
     case "APPLICATION_APPROVED":
     case "APPLICATION_REJECTED":
     case "WAITLIST_SEAT_OPENED":
-      return notification.targetStudyId ? `/studies/${notification.targetStudyId}` : null;
+    case "STUDY_LEVEL_UP":
+      return notification.targetId ? `/studies/${notification.targetId}` : null;
     case "STUDY_SCHEDULE_CHANGED":
       return "/calendar";
+    case "MEMOIR_COMMENT_ADDED":
+    case "MEMOIR_LIKE_ADDED":
+      return notification.targetId ? `/memoirs/${notification.targetId}` : null;
     default:
       return null;
   }

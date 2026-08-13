@@ -2,6 +2,7 @@ package com.groovy.backend.domain.memoir.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,8 @@ import com.groovy.backend.domain.memoir.MemoirComment;
 import com.groovy.backend.domain.memoir.dto.MemoirCommentRequest;
 import com.groovy.backend.domain.memoir.dto.MemoirCommentResponse;
 import com.groovy.backend.domain.memoir.repository.MemoirCommentRepository;
+import com.groovy.backend.domain.notification.event.MemoirCommentAddedEvent;
+import com.groovy.backend.domain.study.service.StudyService;
 import com.groovy.backend.domain.user.User;
 import com.groovy.backend.domain.user.repository.UserRepository;
 import com.groovy.backend.global.exception.ForbiddenException;
@@ -29,6 +32,8 @@ public class MemoirCommentService {
 	private final MemoirCommentRepository memoirCommentRepository;
 	private final MemoirService memoirService;
 	private final UserRepository userRepository;
+	private final ApplicationEventPublisher eventPublisher;
+	private final StudyService studyService;
 
 	@Transactional
 	public MemoirCommentResponse createComment(String email, Long memoirId, MemoirCommentRequest request) {
@@ -42,8 +47,14 @@ public class MemoirCommentService {
 			.build();
 
 		MemoirComment saved = memoirCommentRepository.save(comment);
-		memoir.getStudy().addExp(COMMENT_EXP);
+		studyService.addExpAndNotifyLevelUp(memoir.getStudy(), COMMENT_EXP);
 		log.info("회고록 댓글 작성: memoirId={}, commentId={}, authorId={}", memoirId, saved.getId(), author.getId());
+
+		// 회고록 작성자 본인이 자기 글에 단 댓글은 알림을 보내지 않는다.
+		if (!memoir.isAuthor(author.getId())) {
+			eventPublisher.publishEvent(new MemoirCommentAddedEvent(
+				memoir.getAuthor().getId(), author.getName(), memoirId, memoir.getTitle()));
+		}
 
 		return MemoirCommentResponse.from(saved);
 	}

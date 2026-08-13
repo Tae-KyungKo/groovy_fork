@@ -103,8 +103,11 @@ public class Study extends BaseTimeEntity {
 		return this.leader.getId().equals(userId);
 	}
 
-	public void addExp(int amount) {
+	// 레벨이 실제로 올랐는지(호출한 쪽이 레벨업 알림을 보낼지 판단할 수 있도록)를 반환한다.
+	public boolean addExp(int amount) {
+		int previousLevel = this.level;
 		this.expPoint += amount;
 		this.level = this.expPoint / EXP_PER_LEVEL + 1;
+		return this.level > previousLevel;
 	}
 }
