@@ -8,5 +8,5 @@ receivers:
   - name: "slack-notifications"
     slack_configs:
       - api_url_file: "/tmp/slack_webhook_url"
-        channel: "#groovy-alert"
+        channel: "#grafana-alert"
         send_resolved: true
