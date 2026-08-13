@@ -19,6 +19,8 @@ public record StudyResponse(
 	List<MeetingDay> meetingDays,
 	LocalTime meetingStartTime,
 	LocalTime meetingEndTime,
+	Integer level,
+	Integer expPoint,
 	LocalDateTime createdAt,
 	LocalDateTime updatedAt,
 	// 목록/매칭 등 다건 조회에서는 항상 기본값("NONE"/false)이고, 상세조회(getStudy)에서만 실제 값이 채워진다.
@@ -50,6 +52,8 @@ public record StudyResponse(
 			study.getMeetingDays().stream().sorted().toList(),
 			study.getMeetingStartTime(),
 			study.getMeetingEndTime(),
+			study.getLevel(),
+			study.getExpPoint(),
 			study.getCreatedAt(),
 			study.getUpdatedAt(),
 			myApplicationStatus,

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { LevelBadge } from "./LevelBadge";
 import type { Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
 import { formatTime } from "../utils/date";
@@ -24,9 +25,12 @@ export function StudyCard({ study, tagsById, matchScore }: StudyCardProps) {
 
   return (
     <Link to={`/studies/${study.id}`} className="study-card">
-      <span className={`study-status${isFull ? " full" : ""}`}>
-        {isFull ? "모집마감" : "모집중"}
-      </span>
+      <div className="study-card-top">
+        <span className={`study-status${isFull ? " full" : ""}`}>
+          {isFull ? "모집마감" : "모집중"}
+        </span>
+        <LevelBadge level={study.level} />
+      </div>
       <div className="tag-picker">
         {visibleTagIds.map((id) => (
           <span key={id} className="tag-chip">

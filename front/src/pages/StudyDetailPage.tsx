@@ -11,6 +11,7 @@ import {
 } from "../api/studies";
 import { listTags } from "../api/tags";
 import { CalendarIcon, ChevronLeftIcon, ClockIcon, UsersIcon } from "../components/icons";
+import { LevelBadge } from "../components/LevelBadge";
 import { useAuth } from "../context/AuthContext";
 import type { ApplicationStatus, Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
@@ -150,6 +151,7 @@ export function StudyDetailPage() {
           <span className="avatar avatar-sm">{study.leaderName.charAt(0)}</span>
           <span className="host-name">{study.leaderName}</span>
           <span className="host-badge">방장</span>
+          <LevelBadge level={study.level} expPoint={study.expPoint} />
         </div>
       </div>
 
