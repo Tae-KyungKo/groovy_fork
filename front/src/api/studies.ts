@@ -53,6 +53,18 @@ export async function cancelApplication(studyId: string): Promise<void> {
   return apiFetch<void>(`/api/studies/${studyId}/applications`, { method: "DELETE" });
 }
 
+export async function leaveStudy(studyId: string): Promise<void> {
+  return apiFetch<void>(`/api/studies/${studyId}/membership`, { method: "DELETE" });
+}
+
+export async function registerWaitlist(studyId: string): Promise<void> {
+  return apiFetch<void>(`/api/studies/${studyId}/waitlist`, { method: "POST" });
+}
+
+export async function cancelWaitlist(studyId: string): Promise<void> {
+  return apiFetch<void>(`/api/studies/${studyId}/waitlist`, { method: "DELETE" });
+}
+
 export async function listApplications(studyId: string): Promise<Application[]> {
   return apiFetch<Application[]>(`/api/studies/${studyId}/applications`);
 }

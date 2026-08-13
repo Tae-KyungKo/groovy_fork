@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { applyToStudy, cancelApplication, deleteStudy, getStudy } from "../api/studies";
+import {
+  applyToStudy,
+  cancelApplication,
+  cancelWaitlist,
+  deleteStudy,
+  getStudy,
+  leaveStudy,
+  registerWaitlist,
+} from "../api/studies";
 import { listTags } from "../api/tags";
 import { CalendarIcon, ChevronLeftIcon, ClockIcon, UsersIcon } from "../components/icons";
 import { useAuth } from "../context/AuthContext";
-import type { Study, Tag } from "../types";
+import type { ApplicationStatus, Study, Tag } from "../types";
 import { DAY_LABELS } from "../types";
 import { formatTime } from "../utils/date";
 
-type ApplyState = "NONE" | "PENDING";
+type MyApplicationStatus = ApplicationStatus | "NONE";
 
 export function StudyDetailPage() {
   const { studyId } = useParams();
@@ -17,9 +25,11 @@ export function StudyDetailPage() {
 
   const [study, setStudy] = useState<Study | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [applyState, setApplyState] = useState<ApplyState>("NONE");
+  const [applyStatus, setApplyStatus] = useState<MyApplicationStatus>("NONE");
+  const [waitlistRegistered, setWaitlistRegistered] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionPending, setActionPending] = useState(false);
 
   const isOwner = user && study && user.id === study.leaderId;
   const isFull = study ? study.memberCount >= study.capacity : false;
@@ -29,6 +39,8 @@ export function StudyDetailPage() {
     setLoading(true);
     Promise.all([getStudy(studyId), listTags()]).then(([studyData, tagList]) => {
       setStudy(studyData);
+      setApplyStatus(studyData.myApplicationStatus);
+      setWaitlistRegistered(studyData.myWaitlistRegistered);
       setTags(tagList);
       setLoading(false);
     });
@@ -39,18 +51,65 @@ export function StudyDetailPage() {
   async function handleApply() {
     if (!studyId) return;
     setActionError(null);
+    setActionPending(true);
     try {
       await applyToStudy(studyId);
-      setApplyState("PENDING");
+      setApplyStatus("PENDING");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "신청에 실패했습니다.");
+    } finally {
+      setActionPending(false);
     }
   }
 
   async function handleCancelApply() {
     if (!studyId) return;
     await cancelApplication(studyId);
-    setApplyState("NONE");
+    setApplyStatus("NONE");
+  }
+
+  async function handleLeave() {
+    if (!studyId) return;
+    if (!confirm("정말 이 스터디에서 탈퇴할까요?")) return;
+    setActionError(null);
+    setActionPending(true);
+    try {
+      await leaveStudy(studyId);
+      setApplyStatus("NONE");
+      setStudy((prev) => (prev ? { ...prev, memberCount: prev.memberCount - 1 } : prev));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "탈퇴에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  async function handleRegisterWaitlist() {
+    if (!studyId) return;
+    setActionError(null);
+    setActionPending(true);
+    try {
+      await registerWaitlist(studyId);
+      setWaitlistRegistered(true);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "빈자리 알림 등록에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  async function handleCancelWaitlist() {
+    if (!studyId) return;
+    setActionError(null);
+    setActionPending(true);
+    try {
+      await cancelWaitlist(studyId);
+      setWaitlistRegistered(false);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "빈자리 알림 취소에 실패했습니다.");
+    } finally {
+      setActionPending(false);
+    }
   }
 
   async function handleDelete() {
@@ -128,15 +187,32 @@ export function StudyDetailPage() {
       <div className="action-bar">
         {!isOwner && user && (
           <>
-            {applyState === "NONE" ? (
-              <button type="button" className="wide" onClick={handleApply} disabled={isFull}>
-                {isFull ? "정원 마감" : "참여 신청하기"}
+            {applyStatus === "NONE" && !isFull && (
+              <button type="button" className="wide" onClick={handleApply} disabled={actionPending}>
+                참여 신청하기
               </button>
-            ) : (
+            )}
+            {applyStatus === "NONE" && isFull && !waitlistRegistered && (
+              <button type="button" className="wide" onClick={handleRegisterWaitlist} disabled={actionPending}>
+                빈자리 알림 등록
+              </button>
+            )}
+            {applyStatus === "NONE" && isFull && waitlistRegistered && (
+              <button type="button" className="wide secondary" onClick={handleCancelWaitlist} disabled={actionPending}>
+                빈자리 알림 등록됨 (취소)
+              </button>
+            )}
+            {applyStatus === "PENDING" && (
               <button type="button" className="wide secondary" onClick={handleCancelApply}>
                 신청 취소
               </button>
             )}
+            {applyStatus === "APPROVED" && (
+              <button type="button" className="wide secondary" onClick={handleLeave} disabled={actionPending}>
+                탈퇴하기
+              </button>
+            )}
+            {applyStatus === "REJECTED" && <p className="host-hint">참여 신청이 거절됐어요.</p>}
           </>
         )}
         {!user && <p className="host-hint">참여 신청은 로그인 후 이용할 수 있습니다.</p>}

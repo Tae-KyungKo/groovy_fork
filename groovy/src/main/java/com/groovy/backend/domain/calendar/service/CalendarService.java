@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,9 @@ import com.groovy.backend.domain.calendar.dto.CalendarEventResponse;
 import com.groovy.backend.domain.calendar.dto.CalendarUpdateRequest;
 import com.groovy.backend.domain.calendar.dto.MyStudyOptionResponse;
 import com.groovy.backend.domain.calendar.repository.CalendarRepository;
+import com.groovy.backend.domain.notification.event.StudyScheduleChangedEvent;
+import com.groovy.backend.domain.notification.event.StudyScheduleChangedEvent.ChangeType;
+import com.groovy.backend.domain.study.Application;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.study.repository.ApplicationRepository;
@@ -37,6 +41,7 @@ public class CalendarService {
 	private final ApplicationRepository applicationRepository;
 	private final StudyRepository studyRepository;
 	private final UserRepository userRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public CalendarEventResponse addSchedule(String email, CalendarCreateRequest request) {
@@ -58,6 +63,10 @@ public class CalendarService {
 
 		Calendar saved = calendarRepository.save(calendar);
 		log.info("일정 등록: email={}, studyId={}, calendarId={}", email, request.studyId(), saved.getId());
+
+		if (study != null) {
+			notifyStudyMembers(study, user.getId(), saved.getTitle(), ChangeType.CREATED);
+		}
 
 		return CalendarEventResponse.from(saved, user.getId());
 	}
@@ -82,6 +91,10 @@ public class CalendarService {
 		calendar.update(request.title(), request.content(), startDate, endDate);
 		log.info("일정 수정: email={}, calendarId={}", email, id);
 
+		if (!calendar.isPersonal()) {
+			notifyStudyMembers(calendar.getStudy(), user.getId(), calendar.getTitle(), ChangeType.UPDATED);
+		}
+
 		return CalendarEventResponse.from(calendar, user.getId());
 	}
 
@@ -91,8 +104,16 @@ public class CalendarService {
 		Calendar calendar = findCalendarOrThrow(id);
 		assertManageable(user, calendar);
 
+		boolean isStudySchedule = !calendar.isPersonal();
+		Study study = calendar.getStudy();
+		String title = calendar.getTitle();
+
 		calendarRepository.delete(calendar);
 		log.info("일정 삭제: email={}, calendarId={}", email, id);
+
+		if (isStudySchedule) {
+			notifyStudyMembers(study, user.getId(), title, ChangeType.DELETED);
+		}
 	}
 
 	/**
@@ -208,6 +229,26 @@ public class CalendarService {
 			log.warn("스터디 일정 수정/삭제 권한 없음: userId={}, studyId={}", user.getId(), calendar.getStudy().getId());
 			throw new ForbiddenException("스터디 방장만 그룹 일정을 수정/삭제할 수 있습니다.");
 		}
+	}
+
+	// 방장 + 승인된 멤버 전원(행위자 본인 제외)에게 스터디 일정 변경을 알린다.
+	private void notifyStudyMembers(Study study, Long actorUserId, String scheduleTitle, ChangeType changeType) {
+		List<Long> recipientUserIds = Stream.concat(
+				Stream.of(study.getLeader().getId()),
+				applicationRepository.findByStudyIdAndStatus(study.getId(), ApplicationStatus.APPROVED).stream()
+					.map(Application::getApplicant)
+					.map(User::getId)
+			)
+			.filter(userId -> !userId.equals(actorUserId))
+			.distinct()
+			.toList();
+
+		if (recipientUserIds.isEmpty()) {
+			return;
+		}
+
+		eventPublisher.publishEvent(new StudyScheduleChangedEvent(
+			recipientUserIds, study.getId(), study.getTitle(), scheduleTitle, changeType));
 	}
 
 	private void validatePeriod(LocalDate startDate, LocalDate endDate) {

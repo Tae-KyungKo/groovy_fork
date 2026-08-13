@@ -56,6 +56,9 @@ export interface Study {
   meetingStartTime: string | null;
   meetingEndTime: string | null;
   createdAt: string;
+  // 상세조회(getStudy)에서만 실제 값이 채워진다. 목록/매칭 조회에서는 항상 "NONE"/false.
+  myApplicationStatus: ApplicationStatus | "NONE";
+  myWaitlistRegistered: boolean;
 }
 
 export interface StudyMatch {
@@ -93,4 +96,20 @@ export interface CalendarEvent {
 export interface CalendarStudyOption {
   studyId: string;
   title: string;
+}
+
+export type NotificationType =
+  | "APPLICATION_RECEIVED"
+  | "APPLICATION_APPROVED"
+  | "APPLICATION_REJECTED"
+  | "STUDY_SCHEDULE_CHANGED"
+  | "WAITLIST_SEAT_OPENED";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  targetStudyId: string | null;
+  createdAt: string;
 }

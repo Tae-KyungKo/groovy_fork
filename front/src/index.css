@@ -183,6 +183,100 @@ a:hover {
   padding: 24px 0;
 }
 
+.page-subtitle {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.notification-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-icon.type-received,
+.notification-icon.type-schedule {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notification-icon.type-approved,
+.notification-icon.type-waitlist {
+  background: var(--positive-bg);
+  color: var(--positive-text);
+}
+
+.notification-icon.type-rejected {
+  background: var(--surface-alt);
+  color: var(--text-assistive);
+}
+
+.notification-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.notification-message {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notification-time {
+  font-size: 12.5px;
+  color: var(--text-assistive);
+  margin-top: 2px;
+}
+
+.notification-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--danger);
+}
+
 .center-text {
   text-align: center;
 }
@@ -604,6 +698,28 @@ button.day-chip.active {
 .icon-button:hover {
   background: var(--surface-alt);
   color: var(--text-h);
+}
+
+.notification-bell {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .tag-actions {

@@ -5,6 +5,7 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MyPage } from "./pages/MyPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { SignupPage } from "./pages/SignupPage";
 import { StudyApplicationsPage } from "./pages/StudyApplicationsPage";
 import { StudyDetailPage } from "./pages/StudyDetailPage";
@@ -58,6 +59,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MyPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationsPage />
           </ProtectedRoute>
         ),
       },

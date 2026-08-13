@@ -1,9 +1,13 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
+import { BellIcon } from "./icons";
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { notifications } = useNotifications();
   const navigate = useNavigate();
+  const unreadCount = notifications.length;
 
   async function handleLogout() {
     await logout();
@@ -22,6 +26,12 @@ export function Header() {
       <div className="header-actions">
         {user ? (
           <>
+            <Link to="/notifications" className="icon-button notification-bell" aria-label="알림함">
+              <BellIcon />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+              )}
+            </Link>
             <Link to="/me">{user.name}</Link>
             <button type="button" className="secondary" onClick={handleLogout}>
               로그아웃

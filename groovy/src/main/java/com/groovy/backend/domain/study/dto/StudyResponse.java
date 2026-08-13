@@ -20,10 +20,24 @@ public record StudyResponse(
 	LocalTime meetingStartTime,
 	LocalTime meetingEndTime,
 	LocalDateTime createdAt,
-	LocalDateTime updatedAt
+	LocalDateTime updatedAt,
+	// 목록/매칭 등 다건 조회에서는 항상 기본값("NONE"/false)이고, 상세조회(getStudy)에서만 실제 값이 채워진다.
+	// 다건 조회 경로에서 유저별로 계산하면 페이지당 N번 조회하는 N+1이 되므로 절대 붙이지 않는다.
+	String myApplicationStatus,
+	boolean myWaitlistRegistered
 ) {
 
 	public static StudyResponse from(Study study, long memberCount, List<Long> tagIds) {
+		return from(study, memberCount, tagIds, "NONE", false);
+	}
+
+	public static StudyResponse from(
+		Study study,
+		long memberCount,
+		List<Long> tagIds,
+		String myApplicationStatus,
+		boolean myWaitlistRegistered
+	) {
 		return new StudyResponse(
 			String.valueOf(study.getId()),
 			study.getTitle(),
@@ -37,7 +51,9 @@ public record StudyResponse(
 			study.getMeetingStartTime(),
 			study.getMeetingEndTime(),
 			study.getCreatedAt(),
-			study.getUpdatedAt()
+			study.getUpdatedAt(),
+			myApplicationStatus,
+			myWaitlistRegistered
 		);
 	}
 }

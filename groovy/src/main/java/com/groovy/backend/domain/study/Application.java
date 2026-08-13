@@ -63,6 +63,12 @@ public class Application extends BaseTimeEntity {
 		this.status = ApplicationStatus.REJECTED;
 	}
 
+	// (study_id, applicant_id)에 유니크 제약이 있어 거절된 신청은 새 row를 만드는 대신
+	// 기존 row를 PENDING으로 되돌려 재사용한다.
+	public void reapply() {
+		this.status = ApplicationStatus.PENDING;
+	}
+
 	public boolean isPending() {
 		return this.status == ApplicationStatus.PENDING;
 	}

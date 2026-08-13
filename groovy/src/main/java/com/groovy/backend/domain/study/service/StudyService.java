@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.groovy.backend.domain.notification.event.WaitlistSeatOpenedEvent;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.study.dto.StudyCreateRequest;
@@ -36,10 +38,14 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class StudyService {
 
+	private static final String ANONYMOUS_PRINCIPAL = "anonymousUser";
+
 	private final StudyRepository studyRepository;
 	private final ApplicationRepository applicationRepository;
 	private final UserRepository userRepository;
 	private final TagService tagService;
+	private final WaitlistService waitlistService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public StudyResponse createStudy(String leaderEmail, StudyCreateRequest request) {
@@ -95,24 +101,54 @@ public class StudyService {
 			.toList();
 	}
 
-	public StudyResponse getStudy(Long studyId) {
+	// 비로그인(permitAll)으로도 접근 가능한 엔드포인트라 email이 null이거나 Spring Security의
+	// 익명 필터가 채우는 "anonymousUser"일 수 있다 — 이 경우 내 신청/대기열 상태는 전부 기본값으로 둔다.
+	public StudyResponse getStudy(String email, Long studyId) {
 		Study study = getStudyEntity(studyId);
 		long memberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
 		List<Long> tagIds = tagService.getStudyTagIds(studyId);
 
-		return StudyResponse.from(study, memberCount, tagIds);
+		if (email == null || ANONYMOUS_PRINCIPAL.equals(email)) {
+			return StudyResponse.from(study, memberCount, tagIds, "NONE", false);
+		}
+
+		User viewer = getUser(email);
+		String myApplicationStatus = resolveMyApplicationStatus(study, viewer);
+		boolean myWaitlistRegistered = waitlistService.isRegistered(studyId, viewer.getId());
+		return StudyResponse.from(study, memberCount, tagIds, myApplicationStatus, myWaitlistRegistered);
+	}
+
+	private String resolveMyApplicationStatus(Study study, User viewer) {
+		if (study.isLeader(viewer.getId())) {
+			return "APPROVED";
+		}
+		return applicationRepository.findByStudyIdAndApplicantId(study.getId(), viewer.getId())
+			.map(application -> application.getStatus().name())
+			.orElse("NONE");
 	}
 
 	@Transactional
 	public StudyResponse updateStudy(String email, Long studyId, StudyUpdateRequest request) {
-		Study study = getStudyEntity(studyId);
+		Study study = getStudyEntityForUpdate(studyId);
 		validateLeader(study, email);
+
+		Integer previousCapacity = study.getCapacity();
+		long approvedCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED);
+		boolean wasFull = approvedCount + 1 >= previousCapacity;
 
 		study.update(request.title(), request.description(), request.capacity(), request.meetingDays(), request.meetingStartTime(), request.meetingEndTime());
 		tagService.replaceStudyTags(study, request.tagIds());
 		log.info("스터디 수정: studyId={}, email={}", studyId, email);
 
-		long memberCount = applicationRepository.countByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED) + 1;
+		boolean isFullNow = approvedCount + 1 >= study.getCapacity();
+		if (wasFull && !isFullNow) {
+			List<Long> recipientUserIds = waitlistService.findRecipientUserIds(studyId);
+			if (!recipientUserIds.isEmpty()) {
+				eventPublisher.publishEvent(new WaitlistSeatOpenedEvent(recipientUserIds, studyId, study.getTitle()));
+			}
+		}
+
+		long memberCount = approvedCount + 1;
 		return StudyResponse.from(study, memberCount, request.tagIds());
 	}
 
@@ -196,6 +232,15 @@ public class StudyService {
 
 	Study getStudyEntity(Long studyId) {
 		return studyRepository.findById(studyId)
+			.orElseThrow(() -> {
+				log.warn("존재하지 않는 스터디: studyId={}", studyId);
+				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
+			});
+	}
+
+	// 정원 관련 판단(승인/탈퇴/정원변경)이 걸리는 지점에서만 사용. 트랜잭션이 끝날 때까지 이 스터디 행을 잠근다.
+	Study getStudyEntityForUpdate(Long studyId) {
+		return studyRepository.findByIdForUpdate(studyId)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 스터디: studyId={}", studyId);
 				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
