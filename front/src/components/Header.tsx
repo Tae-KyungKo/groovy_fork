@@ -17,6 +17,7 @@ export function Header() {
       </Link>
       <nav>
         <NavLink to="/studies">스터디</NavLink>
+        <NavLink to="/memoirs">회고록</NavLink>
         {user && <NavLink to="/calendar">캘린더</NavLink>}
       </nav>
       <div className="header-actions">

@@ -55,6 +55,8 @@ export interface Study {
   meetingDays: DayOfWeek[];
   meetingStartTime: string | null;
   meetingEndTime: string | null;
+  level: number;
+  expPoint: number;
   createdAt: string;
 }
 
@@ -88,3 +90,40 @@ export interface CalendarStudyOption {
   studyId: string;
   title: string;
 }
+
+export interface Memoir {
+  id: string;
+  studyId: string;
+  studyTitle: string;
+  authorId: string;
+  authorName: string;
+  title: string;
+  content: string;
+  commentCount: number;
+  likeCount: number;
+  // 현재 로그인한 뷰어가 이 회고록에 좋아요를 눌렀는지. 비회원 조회 시 항상 false.
+  liked: boolean;
+  // 회고록이 연결된 스터디 팀의 레벨/경험치(회고록·댓글 작성 시 누적).
+  studyLevel: number;
+  studyExpPoint: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MemoirComment {
+  id: string;
+  memoirId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 회고록 작성 시 연결할 스터디를 고르기 위한, 내가 속한(방장이거나 승인된) 스터디 목록.
+export interface MemoirStudyOption {
+  studyId: string;
+  title: string;
+}
+
+export type MemoirSort = "latest" | "popular";

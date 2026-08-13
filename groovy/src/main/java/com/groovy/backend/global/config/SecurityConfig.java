@@ -35,11 +35,14 @@ public class SecurityConfig {
 		"/actuator/prometheus"
 	};
 
-	// 스터디 목록/상세 조회, 전체 태그 목록 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
+	// 스터디 목록/상세 조회, 전체 태그 목록 조회, 회고록 목록/상세/댓글 목록 조회는 비로그인 사용자도 접근 가능해야 하므로 GET 메서드에 한해 비인증 허용
 	private static final String[] PERMIT_ALL_GET_PATTERNS = {
 		"/api/studies",
 		"/api/studies/{studyId}",
-		"/api/tags"
+		"/api/tags",
+		"/api/memoirs",
+		"/api/memoirs/{memoirId}",
+		"/api/memoirs/{memoirId}/comments"
 	};
 
 	private final TokenProvider tokenProvider;
@@ -60,10 +63,17 @@ public class SecurityConfig {
 				.requestMatchers(PERMIT_ALL_PATTERNS).permitAll()
 				// "/api/studies/{studyId}" 패턴은 단일 세그먼트 와일드카드라 "/api/studies/match"도 매칭되므로,
 				// 태그 매칭 조회(JWT 필수)는 permitAll 패턴보다 먼저 명시하여 우회되지 않도록 한다.
+				// "/api/memoirs/{memoirId}"도 마찬가지로 "/api/memoirs/my-studies"를 삼켜버리므로 먼저 명시한다.
 				.requestMatchers(HttpMethod.GET, "/api/studies/match").authenticated()
+				.requestMatchers(HttpMethod.GET, "/api/memoirs/my-studies").authenticated()
+				.requestMatchers(HttpMethod.GET, "/api/memoirs/mine").authenticated()
 				.requestMatchers(HttpMethod.GET, PERMIT_ALL_GET_PATTERNS).permitAll()
 				.anyRequest().authenticated())
 			.exceptionHandling(handler -> handler.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+			// 회고록 목록/상세는 비회원도 보되 좋아요 여부는 로그인 사용자마다 달라야 해서, 토큰이 없을 때
+			// @AuthenticationPrincipal이 스프링 시큐리티 기본 익명 principal("anonymousUser")로 채워지지
+			// 않고 null이 되도록 익명 인증 필터를 끈다. permitAll 자체는 인증 객체 유무와 무관하게 동작한다.
+			.anonymous(AbstractHttpConfigurer::disable)
 			.addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
