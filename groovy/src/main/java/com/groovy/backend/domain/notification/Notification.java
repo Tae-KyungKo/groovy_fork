@@ -1,5 +1,7 @@
 package com.groovy.backend.domain.notification;
 
+import java.time.LocalDateTime;
+
 import com.groovy.backend.common.entity.BaseTimeEntity;
 import com.groovy.backend.domain.user.User;
 
@@ -51,6 +53,11 @@ public class Notification extends BaseTimeEntity {
 	@Column(name = "is_read", nullable = false)
 	private boolean read;
 
+	// 알림함 화면에서 이 알림이 안 보이게 되는(=읽음 처리되는) 그 순간을 기록한다.
+	// 읽은 알림의 보관 기한(읽은 지 N일)을 계산하는 기준이 된다.
+	@Column(name = "read_at")
+	private LocalDateTime readAt;
+
 	@Builder
 	public Notification(User recipient, NotificationType type, String title, String message, Long targetId) {
 		this.recipient = recipient;
@@ -63,5 +70,6 @@ public class Notification extends BaseTimeEntity {
 
 	public void markRead() {
 		this.read = true;
+		this.readAt = LocalDateTime.now();
 	}
 }
