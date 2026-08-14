@@ -46,4 +46,5 @@ data/*
 
 # ===== 선택 (필요에 따라 제외) =====
 nginx copy.conf
-docker-compose.yml.example
+docker-compose.yml.examplealertmanager/slack_webhook_url
+alertmanager/slack_webhook_url
