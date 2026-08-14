@@ -5,12 +5,15 @@ import java.util.concurrent.Executor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+// @EnableScheduling: 알림 정리 배치(NotificationCleanupScheduler)의 @Scheduled가 동작하려면 필요.
 @Configuration
 @EnableAsync
+@EnableScheduling
 public class AsyncConfig {
 
 	// 알림 생성 + SSE push를 요청 스레드와 분리해서, 승인/신청/일정변경 같은 API 응답이
