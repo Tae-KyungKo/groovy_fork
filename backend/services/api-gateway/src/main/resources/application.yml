@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            # Phase 6: Notification이 첫 번째로 추출됐다. 더 구체적인 경로 규칙을 먼저 두고,
+            # 그 외 전부는 계속 레거시 모놀리스로 보낸다(YAML 리스트 순서 = 매칭 우선순위이므로
+            # 반드시 Path=/**보다 위에 와야 한다).
+            - id: notification-service
+              uri: http://notification-service:8085
+              predicates:
+                - Path=/api/notifications/**
+            - id: legacy-monolith
+              uri: http://legacy-monolith:8080
+              predicates:
+                - Path=/**
+
+server:
+  port: 8080
+
+management:
+  # actuator를 별도 포트로 분리한다 — 안 그러면 위 Path=/** 라우트가 이 서비스 자신의
+  # /actuator/health 요청까지 레거시 모놀리스로 그대로 흘려보내 버려서, 게이트웨이 자체가
+  # 죽어도 레거시만 살아있으면 헬스체크가 거짓으로 통과하는 상태가 된다.
+  server:
+    port: 8090
+  # Phase 12: legacy application.yml과 동일한 이유(TracingConfig 참고). 게이트웨이가 요청의
+  # 진입점이므로 여기서 새 트레이스가 시작되고, 하위 라우트(legacy/notification-service)로
+  # W3C traceparent 헤더를 통해 전파된다.
+  otlp:
+    tracing:
+      endpoint: ${OTLP_TRACING_ENDPOINT:http://tempo:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  endpoints:
+    web:
+      exposure:
+        include: health

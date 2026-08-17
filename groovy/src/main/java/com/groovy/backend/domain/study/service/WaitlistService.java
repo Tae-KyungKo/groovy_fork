@@ -12,7 +12,7 @@ import com.groovy.backend.domain.study.repository.ApplicationRepository;
 import com.groovy.backend.domain.study.repository.StudyRepository;
 import com.groovy.backend.domain.study.repository.WaitlistRepository;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ public class WaitlistService {
 
 	private final WaitlistRepository waitlistRepository;
 	private final ApplicationRepository applicationRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 	// StudyService를 쓰면 StudyService.updateStudy() -> WaitlistService -> StudyService로
 	// 순환 의존이 생겨서, 여기서는 StudyRepository를 직접 참조한다(ApplicationService와는 다른 예외적 케이스).
 	private final StudyRepository studyRepository;
@@ -93,7 +93,7 @@ public class WaitlistService {
 	}
 
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");

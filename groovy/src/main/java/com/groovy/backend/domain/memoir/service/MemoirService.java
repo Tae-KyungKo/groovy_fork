@@ -8,7 +8,6 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,16 +26,13 @@ import com.groovy.backend.domain.memoir.repository.MemoirCommentRepository.Memoi
 import com.groovy.backend.domain.memoir.repository.MemoirLikeRepository;
 import com.groovy.backend.domain.memoir.repository.MemoirLikeRepository.MemoirLikeCount;
 import com.groovy.backend.domain.memoir.repository.MemoirRepository;
-import com.groovy.backend.domain.notification.event.MemoirLikeAddedEvent;
-import com.groovy.backend.domain.study.Application;
-import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
-import com.groovy.backend.domain.study.repository.ApplicationRepository;
-import com.groovy.backend.domain.study.repository.StudyRepository;
+import com.groovy.backend.domain.study.service.ApplicationService;
 import com.groovy.backend.domain.study.service.StudyService;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 import com.groovy.backend.global.exception.ForbiddenException;
+import com.groovy.backend.global.notification.NotificationOutboxPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,11 +50,10 @@ public class MemoirService {
 	private final MemoirRepository memoirRepository;
 	private final MemoirCommentRepository memoirCommentRepository;
 	private final MemoirLikeRepository memoirLikeRepository;
-	private final StudyRepository studyRepository;
-	private final ApplicationRepository applicationRepository;
-	private final UserRepository userRepository;
-	private final ApplicationEventPublisher eventPublisher;
+	private final NotificationOutboxPublisher notificationOutboxPublisher;
 	private final StudyService studyService;
+	private final ApplicationService applicationService;
+	private final UserService userService;
 
 	@Transactional
 	public MemoirResponse createMemoir(String email, MemoirCreateRequest request) {
@@ -140,8 +135,8 @@ public class MemoirService {
 
 			// 신규 좋아요일 때만(멱등 재호출 제외), 본인 글에 본인이 누른 좋아요는 알림을 보내지 않는다.
 			if (!memoir.isAuthor(user.getId())) {
-				eventPublisher.publishEvent(new MemoirLikeAddedEvent(
-					memoir.getAuthor().getId(), user.getName(), memoirId, memoir.getTitle()));
+				notificationOutboxPublisher.memoirLikeAdded(
+					memoir.getAuthor().getId(), user.getName(), memoirId, memoir.getTitle());
 			}
 		}
 
@@ -250,14 +245,10 @@ public class MemoirService {
 	}
 
 	private Study resolveMyStudy(User author, Long studyId) {
-		Study study = studyRepository.findById(studyId)
-			.orElseThrow(() -> {
-				log.warn("존재하지 않는 스터디: studyId={}", studyId);
-				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
-			});
+		Study study = studyService.getStudyEntity(studyId);
 
 		boolean isMember = study.isLeader(author.getId())
-			|| applicationRepository.existsByStudyIdAndApplicantIdAndStatus(studyId, author.getId(), ApplicationStatus.APPROVED);
+			|| applicationService.isApprovedMember(studyId, author.getId());
 		if (!isMember) {
 			log.warn("스터디 멤버 아님: studyId={}, userId={}", studyId, author.getId());
 			throw new ForbiddenException("참여 중인 스터디만 회고록으로 연결할 수 있습니다.");
@@ -270,18 +261,17 @@ public class MemoirService {
 	private List<Study> getMyStudies(User user) {
 		Map<Long, Study> studiesById = new LinkedHashMap<>();
 
-		studyRepository.findByLeaderId(user.getId())
+		studyService.getStudiesLedBy(user.getId())
 			.forEach(study -> studiesById.put(study.getId(), study));
 
-		applicationRepository.findByApplicantIdAndStatus(user.getId(), ApplicationStatus.APPROVED).stream()
-			.map(Application::getStudy)
+		applicationService.getApprovedStudies(user.getId())
 			.forEach(study -> studiesById.put(study.getId(), study));
 
 		return List.copyOf(studiesById.values());
 	}
 
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");

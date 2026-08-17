@@ -3,13 +3,9 @@ package com.groovy.backend.domain.study.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groovy.backend.domain.notification.event.ApplicationDecidedEvent;
-import com.groovy.backend.domain.notification.event.ApplicationSubmittedEvent;
-import com.groovy.backend.domain.notification.event.WaitlistSeatOpenedEvent;
 import com.groovy.backend.domain.study.Application;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
@@ -17,7 +13,8 @@ import com.groovy.backend.domain.study.dto.ApplicationResponse;
 import com.groovy.backend.domain.study.dto.MyApplicationResponse;
 import com.groovy.backend.domain.study.repository.ApplicationRepository;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
+import com.groovy.backend.global.notification.NotificationOutboxPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ApplicationService {
 
 	private final ApplicationRepository applicationRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 	private final StudyService studyService;
 	private final WaitlistService waitlistService;
-	private final ApplicationEventPublisher eventPublisher;
+	private final NotificationOutboxPublisher notificationOutboxPublisher;
 
 	@Transactional
 	public ApplicationResponse apply(String email, Long studyId) {
@@ -72,8 +69,8 @@ public class ApplicationService {
 		}
 		log.info("스터디 참여 신청: studyId={}, applicantId={}, applicationId={}", studyId, applicant.getId(), saved.getId());
 
-		eventPublisher.publishEvent(new ApplicationSubmittedEvent(
-			study.getLeader().getId(), applicant.getName(), studyId, study.getTitle()));
+		notificationOutboxPublisher.applicationSubmitted(
+			study.getLeader().getId(), applicant.getName(), studyId, study.getTitle());
 
 		return ApplicationResponse.from(saved);
 	}
@@ -123,7 +120,7 @@ public class ApplicationService {
 		if (wasFull) {
 			List<Long> recipientUserIds = waitlistService.findRecipientUserIds(studyId);
 			if (!recipientUserIds.isEmpty()) {
-				eventPublisher.publishEvent(new WaitlistSeatOpenedEvent(recipientUserIds, studyId, study.getTitle()));
+				notificationOutboxPublisher.waitlistSeatOpened(recipientUserIds, studyId, study.getTitle());
 			}
 		}
 	}
@@ -169,8 +166,8 @@ public class ApplicationService {
 		}
 		log.info("스터디 신청 상태 변경: studyId={}, applicationId={}, status={}", studyId, applicationId, status);
 
-		eventPublisher.publishEvent(new ApplicationDecidedEvent(
-			application.getApplicant().getId(), status == ApplicationStatus.APPROVED, studyId, study.getTitle()));
+		notificationOutboxPublisher.applicationDecided(
+			application.getApplicant().getId(), status == ApplicationStatus.APPROVED, studyId, study.getTitle());
 
 		return ApplicationResponse.from(application);
 	}
@@ -183,8 +180,27 @@ public class ApplicationService {
 				.toList();
 	}
 
+	// Memoir/Calendar가 "이 유저가 이 스터디의 승인된 멤버인지"를 확인할 때 쓰는 공개 API.
+	public boolean isApprovedMember(Long studyId, Long userId) {
+		return applicationRepository.existsByStudyIdAndApplicantIdAndStatus(studyId, userId, ApplicationStatus.APPROVED);
+	}
+
+	// Calendar가 스터디 일정 변경 알림 수신자(승인된 멤버 전원)를 구할 때 쓰는 공개 API.
+	public List<Long> getApprovedMemberUserIds(Long studyId) {
+		return applicationRepository.findByStudyIdAndStatus(studyId, ApplicationStatus.APPROVED).stream()
+				.map(application -> application.getApplicant().getId())
+				.toList();
+	}
+
+	// Memoir/Calendar가 "내가 승인되어 참여 중인 스터디" 목록을 구할 때 쓰는 공개 API.
+	public List<Study> getApprovedStudies(Long userId) {
+		return applicationRepository.findByApplicantIdAndStatus(userId, ApplicationStatus.APPROVED).stream()
+				.map(Application::getStudy)
+				.toList();
+	}
+
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 				.orElseThrow(() -> {
 					log.warn("존재하지 않는 유저: email={}", email);
 					return new IllegalArgumentException("존재하지 않는 유저입니다.");

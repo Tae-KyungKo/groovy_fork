@@ -5,9 +5,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,16 +17,14 @@ import com.groovy.backend.domain.calendar.dto.CalendarEventResponse;
 import com.groovy.backend.domain.calendar.dto.CalendarUpdateRequest;
 import com.groovy.backend.domain.calendar.dto.MyStudyOptionResponse;
 import com.groovy.backend.domain.calendar.repository.CalendarRepository;
-import com.groovy.backend.domain.notification.event.StudyScheduleChangedEvent;
-import com.groovy.backend.domain.notification.event.StudyScheduleChangedEvent.ChangeType;
-import com.groovy.backend.domain.study.Application;
-import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
-import com.groovy.backend.domain.study.repository.ApplicationRepository;
-import com.groovy.backend.domain.study.repository.StudyRepository;
+import com.groovy.backend.domain.study.service.ApplicationService;
+import com.groovy.backend.domain.study.service.StudyService;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 import com.groovy.backend.global.exception.ForbiddenException;
+import com.groovy.backend.global.notification.NotificationOutboxPublisher;
+import com.groovy.backend.global.notification.ScheduleChangeType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 public class CalendarService {
 
 	private final CalendarRepository calendarRepository;
-	private final ApplicationRepository applicationRepository;
-	private final StudyRepository studyRepository;
-	private final UserRepository userRepository;
-	private final ApplicationEventPublisher eventPublisher;
+	private final StudyService studyService;
+	private final ApplicationService applicationService;
+	private final UserService userService;
+	private final NotificationOutboxPublisher notificationOutboxPublisher;
 
 	@Transactional
 	public CalendarEventResponse addSchedule(String email, CalendarCreateRequest request) {
 		User user = getUser(email);
-		Study study = resolveStudyIfPresent(user, request.studyId());
+		Study study = request.studyId() != null ? requireMembership(user, request.studyId()) : null;
 
 		LocalDate startDate = request.startDate();
 		LocalDate endDate = request.endDate() != null ? request.endDate() : startDate;
@@ -54,7 +52,7 @@ public class CalendarService {
 
 		Calendar calendar = Calendar.builder()
 			.user(user)
-			.study(study)
+			.studyId(study != null ? study.getId() : null)
 			.title(request.title())
 			.content(request.content())
 			.startDate(startDate)
@@ -64,25 +62,34 @@ public class CalendarService {
 		Calendar saved = calendarRepository.save(calendar);
 		log.info("일정 등록: email={}, studyId={}, calendarId={}", email, request.studyId(), saved.getId());
 
-		if (study != null) {
-			notifyStudyMembers(study, user.getId(), saved.getTitle(), ChangeType.CREATED);
+		if (study == null) {
+			return CalendarEventResponse.forPersonal(saved, user.getId());
 		}
 
-		return CalendarEventResponse.from(saved, user.getId());
+		notifyStudyMembers(study, user.getId(), saved.getTitle(), ScheduleChangeType.CREATED);
+		return CalendarEventResponse.forStudy(saved, study.getTitle(), study.isLeader(user.getId()));
 	}
 
 	public CalendarEventResponse getSchedule(String email, Long id) {
 		User user = getUser(email);
 		Calendar calendar = findCalendarOrThrow(id);
-		assertViewable(user, calendar);
-		return CalendarEventResponse.from(calendar, user.getId());
+
+		if (calendar.isPersonal()) {
+			assertOwnsPersonal(user, calendar);
+			return CalendarEventResponse.forPersonal(calendar, user.getId());
+		}
+
+		Study study = studyService.getStudyEntity(calendar.getStudyId());
+		assertStudyMember(user, study);
+		return CalendarEventResponse.forStudy(calendar, study.getTitle(), study.isLeader(user.getId()));
 	}
 
 	@Transactional
 	public CalendarEventResponse updateSchedule(String email, Long id, CalendarUpdateRequest request) {
 		User user = getUser(email);
 		Calendar calendar = findCalendarOrThrow(id);
-		assertManageable(user, calendar);
+		Study study = calendar.isPersonal() ? null : studyService.getStudyEntity(calendar.getStudyId());
+		assertManageable(user, calendar, study);
 
 		LocalDate startDate = request.startDate();
 		LocalDate endDate = request.endDate() != null ? request.endDate() : startDate;
@@ -91,28 +98,27 @@ public class CalendarService {
 		calendar.update(request.title(), request.content(), startDate, endDate);
 		log.info("일정 수정: email={}, calendarId={}", email, id);
 
-		if (!calendar.isPersonal()) {
-			notifyStudyMembers(calendar.getStudy(), user.getId(), calendar.getTitle(), ChangeType.UPDATED);
+		if (study == null) {
+			return CalendarEventResponse.forPersonal(calendar, user.getId());
 		}
 
-		return CalendarEventResponse.from(calendar, user.getId());
+		notifyStudyMembers(study, user.getId(), calendar.getTitle(), ScheduleChangeType.UPDATED);
+		return CalendarEventResponse.forStudy(calendar, study.getTitle(), study.isLeader(user.getId()));
 	}
 
 	@Transactional
 	public void deleteSchedule(String email, Long id) {
 		User user = getUser(email);
 		Calendar calendar = findCalendarOrThrow(id);
-		assertManageable(user, calendar);
+		Study study = calendar.isPersonal() ? null : studyService.getStudyEntity(calendar.getStudyId());
+		assertManageable(user, calendar, study);
 
-		boolean isStudySchedule = !calendar.isPersonal();
-		Study study = calendar.getStudy();
 		String title = calendar.getTitle();
-
 		calendarRepository.delete(calendar);
 		log.info("일정 삭제: email={}, calendarId={}", email, id);
 
-		if (isStudySchedule) {
-			notifyStudyMembers(study, user.getId(), title, ChangeType.DELETED);
+		if (study != null) {
+			notifyStudyMembers(study, user.getId(), title, ScheduleChangeType.DELETED);
 		}
 	}
 
@@ -123,15 +129,23 @@ public class CalendarService {
 	public List<CalendarEventResponse> getIntegratedCalendar(String email) {
 		User user = getUser(email);
 
-		List<Calendar> personalSchedules = calendarRepository.findByUserIdAndStudyIsNull(user.getId());
+		List<Calendar> personalSchedules = calendarRepository.findByUserIdAndStudyIdIsNull(user.getId());
 
-		List<Long> myStudyIds = getMyStudies(user).stream().map(Study::getId).toList();
-		List<Calendar> studySchedules = myStudyIds.isEmpty()
+		Map<Long, Study> myStudyById = getMyStudies(user).stream()
+			.collect(Collectors.toMap(Study::getId, study -> study));
+		List<Calendar> studySchedules = myStudyById.isEmpty()
 			? List.of()
-			: calendarRepository.findByStudyIdIn(myStudyIds);
+			: calendarRepository.findByStudyIdIn(List.copyOf(myStudyById.keySet()));
 
-		return Stream.concat(personalSchedules.stream(), studySchedules.stream())
-			.map(calendar -> CalendarEventResponse.from(calendar, user.getId()))
+		Stream<CalendarEventResponse> personalEvents = personalSchedules.stream()
+			.map(calendar -> CalendarEventResponse.forPersonal(calendar, user.getId()));
+		Stream<CalendarEventResponse> studyEvents = studySchedules.stream()
+			.map(calendar -> {
+				Study study = myStudyById.get(calendar.getStudyId());
+				return CalendarEventResponse.forStudy(calendar, study.getTitle(), study.isLeader(user.getId()));
+			});
+
+		return Stream.concat(personalEvents, studyEvents)
 			.sorted(Comparator.comparing(CalendarEventResponse::startDate))
 			.toList();
 	}
@@ -143,19 +157,11 @@ public class CalendarService {
 			.toList();
 	}
 
-	private Study resolveStudyIfPresent(User user, Long studyId) {
-		if (studyId == null) {
-			return null;
-		}
-
-		Study study = studyRepository.findById(studyId)
-			.orElseThrow(() -> {
-				log.warn("존재하지 않는 스터디: studyId={}", studyId);
-				return new IllegalArgumentException("존재하지 않는 스터디입니다.");
-			});
+	private Study requireMembership(User user, Long studyId) {
+		Study study = studyService.getStudyEntity(studyId);
 
 		boolean isMember = study.isLeader(user.getId())
-			|| applicationRepository.existsByStudyIdAndApplicantIdAndStatus(studyId, user.getId(), ApplicationStatus.APPROVED);
+			|| applicationService.isApprovedMember(studyId, user.getId());
 		if (!isMember) {
 			log.warn("스터디 멤버 아님: studyId={}, userId={}", studyId, user.getId());
 			throw new ForbiddenException("스터디 멤버만 약속을 등록할 수 있습니다.");
@@ -170,18 +176,17 @@ public class CalendarService {
 	private List<Study> getMyStudies(User user) {
 		Map<Long, Study> studiesById = new LinkedHashMap<>();
 
-		studyRepository.findByLeaderId(user.getId())
+		studyService.getStudiesLedBy(user.getId())
 			.forEach(study -> studiesById.put(study.getId(), study));
 
-		applicationRepository.findByApplicantIdAndStatus(user.getId(), ApplicationStatus.APPROVED).stream()
-			.map(application -> application.getStudy())
+		applicationService.getApprovedStudies(user.getId())
 			.forEach(study -> studiesById.put(study.getId(), study));
 
 		return List.copyOf(studiesById.values());
 	}
 
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");
@@ -196,27 +201,26 @@ public class CalendarService {
 			});
 	}
 
-	// 개인 일정은 작성자 본인만, 스터디 일정은 방장이거나 승인된 멤버만 조회할 수 있다.
-	private void assertViewable(User user, Calendar calendar) {
-		if (calendar.isPersonal()) {
-			if (!calendar.getUser().getId().equals(user.getId())) {
-				log.warn("개인 일정 조회 권한 없음: userId={}, calendarId={}", user.getId(), calendar.getId());
-				throw new ForbiddenException("본인의 개인 일정만 조회할 수 있습니다.");
-			}
-			return;
+	// 개인 일정은 작성자 본인만 조회할 수 있다.
+	private void assertOwnsPersonal(User user, Calendar calendar) {
+		if (!calendar.getUser().getId().equals(user.getId())) {
+			log.warn("개인 일정 조회 권한 없음: userId={}, calendarId={}", user.getId(), calendar.getId());
+			throw new ForbiddenException("본인의 개인 일정만 조회할 수 있습니다.");
 		}
+	}
 
-		Long studyId = calendar.getStudy().getId();
-		boolean isMember = calendar.getStudy().isLeader(user.getId())
-			|| applicationRepository.existsByStudyIdAndApplicantIdAndStatus(studyId, user.getId(), ApplicationStatus.APPROVED);
+	// 스터디 일정은 방장이거나 승인된 멤버만 조회할 수 있다.
+	private void assertStudyMember(User user, Study study) {
+		boolean isMember = study.isLeader(user.getId())
+			|| applicationService.isApprovedMember(study.getId(), user.getId());
 		if (!isMember) {
-			log.warn("스터디 일정 조회 권한 없음: userId={}, studyId={}", user.getId(), studyId);
+			log.warn("스터디 일정 조회 권한 없음: userId={}, studyId={}", user.getId(), study.getId());
 			throw new ForbiddenException("스터디 멤버만 그룹 일정을 조회할 수 있습니다.");
 		}
 	}
 
 	// 개인 일정은 작성자 본인만, 스터디 일정은 방장만 수정/삭제할 수 있다(작성자가 누구든 무관).
-	private void assertManageable(User user, Calendar calendar) {
+	private void assertManageable(User user, Calendar calendar, Study study) {
 		if (calendar.isPersonal()) {
 			if (!calendar.getUser().getId().equals(user.getId())) {
 				log.warn("개인 일정 수정/삭제 권한 없음: userId={}, calendarId={}", user.getId(), calendar.getId());
@@ -225,19 +229,17 @@ public class CalendarService {
 			return;
 		}
 
-		if (!calendar.getStudy().isLeader(user.getId())) {
-			log.warn("스터디 일정 수정/삭제 권한 없음: userId={}, studyId={}", user.getId(), calendar.getStudy().getId());
+		if (!study.isLeader(user.getId())) {
+			log.warn("스터디 일정 수정/삭제 권한 없음: userId={}, studyId={}", user.getId(), study.getId());
 			throw new ForbiddenException("스터디 방장만 그룹 일정을 수정/삭제할 수 있습니다.");
 		}
 	}
 
 	// 방장 + 승인된 멤버 전원(행위자 본인 제외)에게 스터디 일정 변경을 알린다.
-	private void notifyStudyMembers(Study study, Long actorUserId, String scheduleTitle, ChangeType changeType) {
+	private void notifyStudyMembers(Study study, Long actorUserId, String scheduleTitle, ScheduleChangeType changeType) {
 		List<Long> recipientUserIds = Stream.concat(
 				Stream.of(study.getLeader().getId()),
-				applicationRepository.findByStudyIdAndStatus(study.getId(), ApplicationStatus.APPROVED).stream()
-					.map(Application::getApplicant)
-					.map(User::getId)
+				applicationService.getApprovedMemberUserIds(study.getId()).stream()
 			)
 			.filter(userId -> !userId.equals(actorUserId))
 			.distinct()
@@ -247,8 +249,8 @@ public class CalendarService {
 			return;
 		}
 
-		eventPublisher.publishEvent(new StudyScheduleChangedEvent(
-			recipientUserIds, study.getId(), study.getTitle(), scheduleTitle, changeType));
+		notificationOutboxPublisher.studyScheduleChanged(
+			recipientUserIds, study.getId(), study.getTitle(), scheduleTitle, changeType);
 	}
 
 	private void validatePeriod(LocalDate startDate, LocalDate endDate) {

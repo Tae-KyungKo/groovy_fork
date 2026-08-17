@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -14,8 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.groovy.backend.domain.notification.event.StudyLevelUpEvent;
-import com.groovy.backend.domain.notification.event.WaitlistSeatOpenedEvent;
 import com.groovy.backend.domain.study.ApplicationStatus;
 import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.study.dto.StudyCreateRequest;
@@ -28,8 +25,9 @@ import com.groovy.backend.domain.study.repository.StudyRepository;
 import com.groovy.backend.domain.tag.repository.StudyTagRepository.StudyMatchCount;
 import com.groovy.backend.domain.tag.service.TagService;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 import com.groovy.backend.global.exception.ForbiddenException;
+import com.groovy.backend.global.notification.NotificationOutboxPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +42,10 @@ public class StudyService {
 
 	private final StudyRepository studyRepository;
 	private final ApplicationRepository applicationRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 	private final TagService tagService;
 	private final WaitlistService waitlistService;
-	private final ApplicationEventPublisher eventPublisher;
+	private final NotificationOutboxPublisher notificationOutboxPublisher;
 
 	@Transactional
 	public StudyResponse createStudy(String leaderEmail, StudyCreateRequest request) {
@@ -146,7 +144,7 @@ public class StudyService {
 		if (wasFull && !isFullNow) {
 			List<Long> recipientUserIds = waitlistService.findRecipientUserIds(studyId);
 			if (!recipientUserIds.isEmpty()) {
-				eventPublisher.publishEvent(new WaitlistSeatOpenedEvent(recipientUserIds, studyId, study.getTitle()));
+				notificationOutboxPublisher.waitlistSeatOpened(recipientUserIds, studyId, study.getTitle());
 			}
 		}
 
@@ -166,7 +164,7 @@ public class StudyService {
 
 		List<Long> memberUserIds = getMemberUserIds(study);
 		log.info("스터디 레벨업: studyId={}, newLevel={}", study.getId(), study.getLevel());
-		eventPublisher.publishEvent(new StudyLevelUpEvent(memberUserIds, study.getId(), study.getTitle(), study.getLevel()));
+		notificationOutboxPublisher.studyLevelUp(memberUserIds, study.getId(), study.getTitle(), study.getLevel());
 	}
 
 	// 방장 + 승인된 멤버 전원의 유저 id 목록(레벨업 등 스터디 전체 알림 대상 조회용).
@@ -256,7 +254,9 @@ public class StudyService {
 		return approvedMemberCountByStudyId.getOrDefault(studyId, 0L) + 1;
 	}
 
-	Study getStudyEntity(Long studyId) {
+	// Memoir/Calendar 등 다른 도메인이 Study 엔티티를 조회할 때 쓰는 공개 API.
+	// StudyRepository를 다른 도메인에 직접 노출하지 않기 위해 이 메서드를 거치도록 한다.
+	public Study getStudyEntity(Long studyId) {
 		return studyRepository.findById(studyId)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 스터디: studyId={}", studyId);
@@ -281,8 +281,13 @@ public class StudyService {
 		}
 	}
 
+	// Memoir/Calendar가 "내가 방장인 스터디" 목록을 구할 때 쓰는 공개 API.
+	public List<Study> getStudiesLedBy(Long leaderId) {
+		return studyRepository.findByLeaderId(leaderId);
+	}
+
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");

@@ -1,0 +1,26 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.0'
+	id 'io.spring.dependency-management'
+}
+
+// Phase 3: 아직 도메인 로직 없는 빈 골격. groovy(레거시)의 Memoir/MemoirComment/MemoirLike
+// 도메인이 실제로 이 서비스로 옮겨오는 것은 이후 서비스 추출 단계에서 진행한다.
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	implementation project(':libs:event-contract')
+	implementation project(':libs:observability')
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

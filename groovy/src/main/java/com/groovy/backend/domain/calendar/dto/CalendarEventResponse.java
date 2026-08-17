@@ -22,25 +22,25 @@ public record CalendarEventResponse(
 	boolean canManage
 ) {
 
-	public static CalendarEventResponse from(Calendar calendar, Long requesterId) {
-		if (calendar.isPersonal()) {
-			boolean canManage = calendar.getUser().getId().equals(requesterId);
-			return new CalendarEventResponse(
-				"personal-" + calendar.getId(),
-				String.valueOf(calendar.getId()),
-				calendar.getTitle(),
-				calendar.getContent(),
-				calendar.getStartDate().toString(),
-				calendar.getEndDate().toString(),
-				null,
-				null,
-				CalendarSourceType.PERSONAL,
-				canManage
-			);
-		}
+	public static CalendarEventResponse forPersonal(Calendar calendar, Long requesterId) {
+		boolean canManage = calendar.getUser().getId().equals(requesterId);
+		return new CalendarEventResponse(
+			"personal-" + calendar.getId(),
+			String.valueOf(calendar.getId()),
+			calendar.getTitle(),
+			calendar.getContent(),
+			calendar.getStartDate().toString(),
+			calendar.getEndDate().toString(),
+			null,
+			null,
+			CalendarSourceType.PERSONAL,
+			canManage
+		);
+	}
 
-		String studyId = String.valueOf(calendar.getStudy().getId());
-		boolean canManage = calendar.getStudy().isLeader(requesterId);
+	// study 상세 정보(title, 방장 여부)는 다른 Bounded Context(Study)의 데이터라, Calendar가 직접
+	// 들고 있지 않고 호출부(CalendarService)가 StudyService를 통해 조회한 뒤 넘겨준다.
+	public static CalendarEventResponse forStudy(Calendar calendar, String studyTitle, boolean canManage) {
 		return new CalendarEventResponse(
 			"study-" + calendar.getId(),
 			String.valueOf(calendar.getId()),
@@ -48,8 +48,8 @@ public record CalendarEventResponse(
 			calendar.getContent(),
 			calendar.getStartDate().toString(),
 			calendar.getEndDate().toString(),
-			studyId,
-			calendar.getStudy().getTitle(),
+			String.valueOf(calendar.getStudyId()),
+			studyTitle,
 			CalendarSourceType.STUDY,
 			canManage
 		);

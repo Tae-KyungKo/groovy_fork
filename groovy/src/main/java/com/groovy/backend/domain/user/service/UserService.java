@@ -1,5 +1,7 @@
 package com.groovy.backend.domain.user.service;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,7 @@ public class UserService {
 			throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
 		}
 
-		String accessToken = tokenProvider.createToken(user.getEmail(), user.getRoleType());
+		String accessToken = tokenProvider.createToken(user.getEmail(), user.getId(), user.getRoleType());
 		log.info("로그인 성공: email={}, userId={}", user.getEmail(), user.getId());
 		return LoginResponse.of(accessToken);
 	}
@@ -73,5 +75,15 @@ public class UserService {
 			});
 
 		return UserResponse.from(user);
+	}
+
+	// 다른 도메인 서비스가 User를 조회할 때 쓰는 공개 API. UserRepository를 다른 도메인에 직접
+	// 노출하지 않고, 이 메서드를 거치도록 강제해 "누가 User 데이터에 접근하는지"를 한 곳으로 모은다.
+	public Optional<User> findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
+
+	public Optional<User> findById(Long userId) {
+		return userRepository.findById(userId);
 	}
 }

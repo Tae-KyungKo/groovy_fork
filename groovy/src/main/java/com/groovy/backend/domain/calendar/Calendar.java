@@ -3,7 +3,6 @@ package com.groovy.backend.domain.calendar;
 import java.time.LocalDate;
 
 import com.groovy.backend.common.entity.BaseTimeEntity;
-import com.groovy.backend.domain.study.Study;
 import com.groovy.backend.domain.user.User;
 
 import jakarta.persistence.Column;
@@ -35,9 +34,10 @@ public class Calendar extends BaseTimeEntity {
 	private User user;
 
 	// null이면 작성자 개인 일정, 값이 있으면 해당 스터디 멤버 전원에게 공유되는 스터디 약속이다.
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "study_id")
-	private Study study;
+	// Study는 다른 Bounded Context의 Aggregate이므로 JPA 연관관계(엔티티 참조)로 들고 있지 않고
+	// FK 값만 저장한다. 제목/방장 등 상세 정보가 필요하면 StudyService의 공개 API로 조회한다.
+	@Column(name = "study_id")
+	private Long studyId;
 
 	@Column(nullable = false)
 	private String title;
@@ -54,9 +54,9 @@ public class Calendar extends BaseTimeEntity {
 	private LocalDate endDate;
 
 	@Builder
-	public Calendar(User user, Study study, String title, String content, LocalDate startDate, LocalDate endDate) {
+	public Calendar(User user, Long studyId, String title, String content, LocalDate startDate, LocalDate endDate) {
 		this.user = user;
-		this.study = study;
+		this.studyId = studyId;
 		this.title = title;
 		this.content = content;
 		this.startDate = startDate;
@@ -71,6 +71,6 @@ public class Calendar extends BaseTimeEntity {
 	}
 
 	public boolean isPersonal() {
-		return this.study == null;
+		return this.studyId == null;
 	}
 }

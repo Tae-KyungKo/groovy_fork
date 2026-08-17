@@ -2,7 +2,6 @@ package com.groovy.backend.domain.memoir.service;
 
 import java.util.List;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,11 +10,11 @@ import com.groovy.backend.domain.memoir.MemoirComment;
 import com.groovy.backend.domain.memoir.dto.MemoirCommentRequest;
 import com.groovy.backend.domain.memoir.dto.MemoirCommentResponse;
 import com.groovy.backend.domain.memoir.repository.MemoirCommentRepository;
-import com.groovy.backend.domain.notification.event.MemoirCommentAddedEvent;
 import com.groovy.backend.domain.study.service.StudyService;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 import com.groovy.backend.global.exception.ForbiddenException;
+import com.groovy.backend.global.notification.NotificationOutboxPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,8 @@ public class MemoirCommentService {
 
 	private final MemoirCommentRepository memoirCommentRepository;
 	private final MemoirService memoirService;
-	private final UserRepository userRepository;
-	private final ApplicationEventPublisher eventPublisher;
+	private final UserService userService;
+	private final NotificationOutboxPublisher notificationOutboxPublisher;
 	private final StudyService studyService;
 
 	@Transactional
@@ -52,8 +51,8 @@ public class MemoirCommentService {
 
 		// 회고록 작성자 본인이 자기 글에 단 댓글은 알림을 보내지 않는다.
 		if (!memoir.isAuthor(author.getId())) {
-			eventPublisher.publishEvent(new MemoirCommentAddedEvent(
-				memoir.getAuthor().getId(), author.getName(), memoirId, memoir.getTitle()));
+			notificationOutboxPublisher.memoirCommentAdded(
+				memoir.getAuthor().getId(), author.getName(), memoirId, memoir.getTitle());
 		}
 
 		return MemoirCommentResponse.from(saved);
@@ -103,7 +102,7 @@ public class MemoirCommentService {
 	}
 
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");

@@ -21,7 +21,7 @@ import com.groovy.backend.domain.tag.repository.StudyTagRepository.StudyMatchCou
 import com.groovy.backend.domain.tag.repository.TagRepository;
 import com.groovy.backend.domain.tag.repository.UserTagRepository;
 import com.groovy.backend.domain.user.User;
-import com.groovy.backend.domain.user.repository.UserRepository;
+import com.groovy.backend.domain.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class TagService {
 	private final TagRepository tagRepository;
 	private final UserTagRepository userTagRepository;
 	private final StudyTagRepository studyTagRepository;
-	private final UserRepository userRepository;
+	private final UserService userService;
 
 	public List<TagResponse> getTags() {
 		return tagRepository.findAll().stream()
@@ -154,7 +154,7 @@ public class TagService {
 	}
 
 	private User getUser(String email) {
-		return userRepository.findByEmail(email)
+		return userService.findByEmail(email)
 			.orElseThrow(() -> {
 				log.warn("존재하지 않는 유저: email={}", email);
 				return new IllegalArgumentException("존재하지 않는 유저입니다.");
