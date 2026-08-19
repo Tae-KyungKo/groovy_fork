@@ -120,7 +120,6 @@ Groovy/
 │       └── routes.tsx
 ├── nginx/nginx.conf                       # 리버스 프록시 설정
 ├── alertmanager/alertmanager.yml
-├── prometheus/                            # prometheus.yml, alert.rules.yml
 ├── monitoring-msa/                        # tempo, loki, alloy, prometheus, grafana provisioning
 ├── docker-compose.yml                     # 로컬 통합 개발용
 ├── docker-compose.prod.yml                # 운영 배포용

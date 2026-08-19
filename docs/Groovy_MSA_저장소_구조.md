@@ -14,7 +14,6 @@
 | `kafka-init/` | `adminclient.conf` 하나. Kafka가 SASL_PLAINTEXT 인증을 쓰기 때문에, healthcheck용 `kafka-broker-api-versions.sh`가 인증 정보 없이도 브로커 상태를 확인하게 해주는 admin client 설정. |
 | `monitoring-msa/` | MSA 전용 관측성 설정. `loki/`, `alloy/`(레거시 모놀리식 시절 `monitoring/`에서 옮겨온 원본, 변경 없이 그대로 재사용 — Alloy가 Docker 소켓으로 컨테이너를 자동 탐지해서 스택이 바뀌어도 그대로 동작), `tempo/`(분산 트레이싱), `prometheus/`(서비스별 scrape job으로 새로 짠 설정), `grafana/provisioning/`(Prometheus/Loki/Tempo datasource + 대시보드 2개). 레거시 `monitoring/` 디렉토리는 기능이 이 디렉토리로 완전히 흡수되어 삭제됨. |
 | `alertmanager/` | Prometheus 알림을 Slack으로 보내는 Alertmanager 설정. `alertmanager.yml`(라우팅 규칙), `slack_webhook_url`(실제 웹훅 URL, gitignore 대상이라 로컬에서 각자 채워야 함). |
-| `prometheus/` (최상위) | `monitoring-msa/prometheus/prometheus.yml`과 별개로 존재하는 레거시 설정 잔재. 내용이 서로 약간 다르며(alerting/rule_files 섹션 유무 등) 과거 리팩터링 중 옮기다 만 것으로 보이는 미정리 중복이며 어떤 docker-compose 파일에서도 참조되지 않는다. `alert.rules.yml`만 `monitoring-msa/prometheus/`로 복사해 재사용 중. |
 | `nginx/` | `nginx.conf` 하나. 운영 배포용 리버스 프록시(SSL 종료, Let's Encrypt, SSE 구독 경로 특별 처리). 다만 `proxy_pass http://backend:8080`처럼 레거시 모놀리식 시절 hostname을 그대로 참조하고 있어 MSA 구조(`api-gateway`)에 맞게 갱신되지 않은 상태. |
 | `.github/` | `workflows/docker-build-push-frontend.yml`만 존재. 백엔드용 워크플로우는 삭제된 상태. |
 | `.idea/` | IntelliJ 프로젝트 설정. `.gitignore`에 등록되어 커밋되지 않음. |
