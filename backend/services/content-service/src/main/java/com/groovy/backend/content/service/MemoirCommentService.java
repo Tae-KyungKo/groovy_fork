@@ -9,10 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groovy.backend.content.Memoir;
 import com.groovy.backend.content.MemoirComment;
 import com.groovy.backend.content.client.StudyServiceClient;
-import com.groovy.backend.content.client.UserServiceClient;
+import com.groovy.backend.client.UserServiceClient;
 import com.groovy.backend.content.dto.MemoirCommentRequest;
 import com.groovy.backend.content.dto.MemoirCommentResponse;
-import com.groovy.backend.content.exception.ForbiddenException;
+import com.groovy.backend.common.exception.ForbiddenException;
 import com.groovy.backend.content.notification.NotificationOutboxPublisher;
 import com.groovy.backend.content.repository.MemoirCommentRepository;
 

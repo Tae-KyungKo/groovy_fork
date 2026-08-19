@@ -35,6 +35,10 @@ dependencies {
 	// Outbox + Kafka 패턴을 쓴다(OutboxRelay 참고).
 	implementation 'org.springframework.boot:spring-boot-starter-kafka'
 
+	// SchedulingConfig가 직접 등록하는 구 Jackson(com.fasterxml.jackson) ObjectMapper가
+	// EventEnvelope의 Instant occurredAt을 직렬화하려면 필요하다.
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 	// identity-service(JWKS 검증)/study-service(멤버십·수신자 조회) 호출에 Retry+CircuitBreaker를
 	// 건다(study-service/identity-service build.gradle과 동일한 이유).
 	implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.4.0'
@@ -49,6 +53,9 @@ dependencies {
 
 	implementation project(':libs:event-contract')
 	implementation project(':libs:observability')
+	implementation project(':libs:web-common')
+	implementation project(':libs:security-common')
+	implementation project(':libs:client-common')
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

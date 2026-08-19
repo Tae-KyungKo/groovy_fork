@@ -1,12 +1,10 @@
 package com.groovy.backend.content.outbox;
 
-import java.time.Instant;
-import java.util.UUID;
-
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.groovy.backend.eventcontract.EventEnvelope;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,8 +20,8 @@ public class OutboxEventWriter {
 	private final ObjectMapper objectMapper;
 
 	public void write(String eventType, Object payload) {
-		String eventId = UUID.randomUUID().toString();
-		OutboxEnvelope envelope = new OutboxEnvelope(eventId, eventType, Instant.now().toString(), payload);
+		EventEnvelope<Object> envelope = EventEnvelope.of(eventType, payload);
+		String eventId = envelope.eventId().toString();
 
 		try {
 			String json = objectMapper.writeValueAsString(envelope);

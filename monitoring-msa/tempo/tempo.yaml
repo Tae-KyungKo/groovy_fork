@@ -1,7 +1,8 @@
 # MSA 전환 Phase 12: Grafana Tempo 공식 예제
 # (https://github.com/grafana/tempo/blob/main/example/docker-compose/single-binary/tempo.yaml)를
-# 기준으로, Prometheus remote-write가 필요한 metrics_generator 섹션은 뺐다(이 검증 스택엔
-# Prometheus가 없음 — Phase 12 완료 기준은 트레이싱+로그이지 메트릭이 아니다).
+# 기준으로, Prometheus remote-write가 필요한 metrics_generator 섹션은 뺐다 — 메트릭 수집은
+# Prometheus가 각 서비스의 /actuator/prometheus를 직접 스크레이프하는 방식(prometheus.yml
+# 참고)으로 이미 별도로 하고 있어 Tempo의 metrics_generator까지는 필요 없다.
 server:
   http_listen_port: 3200
 

@@ -40,7 +40,7 @@ spring:
 server:
   port: 8082
 
-# identity-service가 발급자다 — 이 서비스는 검증만 한다(notification-service/legacy-monolith와 동일한 패턴).
+# identity-service가 발급자다 — 이 서비스는 검증만 한다(calendar/content/notification-service와 동일한 패턴).
 jwt:
   jwks-url: ${JWT_JWKS_URL:http://identity-service:8081/.well-known/jwks.json}
   jwks-connect-timeout-ms: ${JWT_JWKS_CONNECT_TIMEOUT_MS:2000}

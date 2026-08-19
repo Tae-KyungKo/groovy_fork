@@ -2,6 +2,9 @@ rootProject.name = 'groovy-backend-msa'
 
 include 'libs:event-contract'
 include 'libs:observability'
+include 'libs:web-common'
+include 'libs:security-common'
+include 'libs:client-common'
 
 include 'services:api-gateway'
 include 'services:identity-service'

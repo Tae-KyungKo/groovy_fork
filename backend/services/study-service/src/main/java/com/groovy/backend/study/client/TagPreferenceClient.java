@@ -12,10 +12,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.groovy.backend.client.ResilientCallExecutor;
 import com.groovy.backend.common.response.ApiResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * MSA 전환(Tag 소유권 확정): 태그 매칭 조회("/api/studies/match")에서 tagIds가 안 주어지면
@@ -24,12 +24,15 @@ import lombok.extern.slf4j.Slf4j;
  * identity-service의 공개 API(GET /api/tags/me)를 그대로 재사용한다 — 이 용도만을 위한 내부 API를
  * 새로 만들지 않는다. leaderName/applicantName 조회에 쓰는 UserServiceClient와 동일한
  * identity-service.* 설정(application.yml)을 공유한다.
+ *
+ * identity-service가 다운이 아니라 느려지기만 해도 매 요청이 read-timeout만큼 블로킹되는 걸
+ * 막기 위해 ResilientCallExecutor(CircuitBreaker+Retry)로 호출을 감싼다(8번 항목).
  */
-@Slf4j
 @Component
 public class TagPreferenceClient {
 
 	private final RestClient restClient;
+	private final ResilientCallExecutor executor;
 
 	public TagPreferenceClient(
 		@Value("${identity-service.url:http://identity-service:8081}") String identityServiceUrl,
@@ -46,6 +49,7 @@ public class TagPreferenceClient {
 			.baseUrl(identityServiceUrl)
 			.requestFactory(requestFactory)
 			.build();
+		this.executor = new ResilientCallExecutor("tag-preference-client");
 	}
 
 	public List<Long> getMyPreferredTagIds() {
@@ -54,21 +58,20 @@ public class TagPreferenceClient {
 			return List.of();
 		}
 
-		try {
-			ApiResponse<List<TagIdOnly>> response = restClient.get()
-				.uri("/api/tags/me")
-				.header(HttpHeaders.AUTHORIZATION, authorizationHeader)
-				.retrieve()
-				.body(new ParameterizedTypeReference<ApiResponse<List<TagIdOnly>>>() {
-				});
-			if (response == null || response.data() == null) {
-				return List.of();
-			}
-			return response.data().stream().map(TagIdOnly::id).toList();
-		} catch (Exception e) {
-			log.error("identity-service 선호 태그 조회 실패, 빈 결과로 대체", e);
-			return List.of();
-		}
+		return executor.execute(
+			() -> {
+				ApiResponse<List<TagIdOnly>> response = restClient.get()
+					.uri("/api/tags/me")
+					.header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+					.retrieve()
+					.body(new ParameterizedTypeReference<ApiResponse<List<TagIdOnly>>>() {
+					});
+				if (response == null || response.data() == null) {
+					return List.<Long>of();
+				}
+				return response.data().stream().map(TagIdOnly::id).toList();
+			},
+			List::of);
 	}
 
 	private String currentAuthorizationHeader() {

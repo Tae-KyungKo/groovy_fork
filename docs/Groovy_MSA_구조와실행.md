@@ -11,40 +11,40 @@ Notification/User(인증+Tag)/Study(+Application+Waitlist+StudyTag)/Calendar/Mem
 자체는 삭제됐다. `api-gateway`가 모든 요청의 단일 진입점이며, 경로별로 각 서비스로 직접
 라우팅한다(`backend/services/api-gateway/src/main/resources/application.yml`).
 
-## 2. 세 가지 Docker Compose 파일
+## 2. 두 가지 Docker Compose 파일
 
-서비스 구성(13개 컨테이너: 백엔드 8개 + mysql/redis/kafka/tempo/loki/alloy/grafana)은 세 파일
-모두 동일하고, 용도에 따라 포트 노출/비밀값 처리/재시작 정책만 다르다.
+서비스 구성(13개 컨테이너: 백엔드 8개 + mysql/redis/kafka/tempo/loki/alloy/grafana)은 두 파일
+모두 동일하고, 용도에 따라 포트 노출/비밀값 처리만 다르다.
 
 | 파일 | 용도 | 호스트 포트 노출 | 비밀값 |
 |---|---|---|---|
 | `docker-compose.local.yml` | 로컬 개발. 모든 서비스를 직접 호출하며 디버깅 | 전부 노출 | 안전한 로컬 전용 기본값 |
-| `docker-compose.prod.yml` | 운영 배포. `restart: unless-stopped` | `api-gateway`(8080)와 `grafana`만 노출 | 기본값 없음 — `.env` 미설정 시 기동 실패(`${VAR:?...}`) |
 | `docker-compose.example.yml` | 구조를 보여주는 온보딩/참고용 | 전부 노출(local과 동일) | 눈에 띄는 `CHANGE_ME_*` 플레이스홀더 |
 
-frontend/nginx(리버스 프록시)/certbot 통합은 세 파일 모두 범위 밖이다 — 별도로 진행한다.
+운영 배포용 compose/env 파일은 이 저장소에 두지 않고 운영 서버에서 직접 작성·관리한다 —
+원본 Groovy 레포로 통합할 때 이 저장소 기준으로 다시 만들어야 할 목록은
+[`원본 레포 통합 시 주의점.md`](./원본%20레포%20통합%20시%20주의점.md) 참고.
+
+frontend/nginx(리버스 프록시)/certbot 통합은 두 파일 모두 범위 밖이다 — 별도로 진행한다.
 모든 서비스를 소스에서 직접 빌드한다(`context: ./backend`) — 서비스별 이미지를 Docker Hub에
 미리 빌드·푸시하는 CI가 아직 없다(frontend만 기존 CI로 이미지가 빌드된다).
 
 ## 3. 실행
 
 ```bash
-cp .env.example .env   # 값 수정(로컬은 기본값 그대로도 동작, 운영은 실제 값 필수)
+cp .env.example .env   # 값 수정(기본값 그대로도 로컬에서 동작)
 
-# 로컬 개발
 docker compose -f docker-compose.local.yml up -d --build
 docker compose -f docker-compose.local.yml ps
 docker compose -f docker-compose.local.yml down
-
-# 운영 배포
-docker compose --env-file .env -f docker-compose.prod.yml up -d --build
 ```
 
 ## 4. 서비스 목록과 포트
 
 포트 열은 `docker-compose.local.yml`/`docker-compose.example.yml` 기준(기본값, `.env`로
-변경 가능). `docker-compose.prod.yml`에서는 "P" 표시된 것만 호스트에 노출되고, 나머지는
-컴포즈 내부 네트워크(`groovy-net`)에서 서비스명으로만 접근 가능하다.
+변경 가능). "prod 노출" 열은 운영 배포 시 지향해야 할 노출 범위(설계 목표)를 적어둔 것이며,
+현재 이 저장소에는 그 설정을 실제로 담은 파일이 없다 — "P" 표시만 호스트에 노출하고 나머지는
+내부 네트워크로만 접근하게 만드는 것을 목표로 한다.
 
 ### 애플리케이션
 

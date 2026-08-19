@@ -19,7 +19,7 @@
 | `.idea/` | IntelliJ 프로젝트 설정. `.gitignore`에 등록되어 커밋되지 않음. |
 | `out/` | IntelliJ가 레거시 `Groovy` 모듈을 빌드할 때 생긴 산출물(gradlew/build.gradle 사본 등) 9개 파일이 **`.gitignore`에 안 걸려 실제로 git에 커밋된 상태** — 실수로 커밋된 빌드 아티팩트로 보인다. |
 
-**최상위 주요 파일**: `docker-compose.local.yml`(로컬 개발용, 현재 사용 중), `docker-compose.example.yml`(값 채우는 법을 보여주는 온보딩용 사본, local과 서비스 구성 동일), `docker-compose.prod.yml`(운영 배포용, 호스트 포트 노출 최소화 + restart 정책), `.env.example`(위 compose들이 읽는 환경변수 예시), `README.md`(프로젝트 소개).
+**최상위 주요 파일**: `docker-compose.local.yml`(로컬 개발용, 현재 사용 중), `docker-compose.example.yml`(값 채우는 법을 보여주는 온보딩용 사본, local과 서비스 구성 동일), `.env.example`(위 compose들이 읽는 환경변수 예시), `README.md`(프로젝트 소개). 운영 배포용 compose/env 파일은 이 저장소가 아니라 운영 서버에서 직접 관리한다.
 
 ---
 

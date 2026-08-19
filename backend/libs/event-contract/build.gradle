@@ -1,5 +1,5 @@
-// 계획서 경고: 이 모듈에는 순수 DTO(record)만 둔다. Entity/Repository/Business Service를
-// 여기 넣는 순간 모든 서비스가 다시 하나로 묶인다(Groovy_MSA_전환계획.md Phase 3 "common 모듈 경고" 참고).
+// 이 모듈에는 순수 DTO(record)만 둔다. Entity/Repository/Business Service를
+// 여기 넣는 순간 모든 서비스가 다시 하나로 묶인다
 plugins {
 	id 'java-library'
 }

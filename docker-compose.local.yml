@@ -7,9 +7,9 @@
 # docs/Groovy_MSA_Phase*.md, docs/Groovy_MSA_구조와실행.md 참고.
 #
 # 모든 서비스를 소스에서 직접 빌드한다(context: ./backend). 각 서비스 포트를 전부 호스트에
-# 노출해서 개별 서비스를 직접 호출하며 디버깅할 수 있게 한다. 운영 배포는 docker-compose.prod.yml
-# (호스트 노출 최소화 + restart 정책), 값 채우는 방법을 보여주는 예시는 docker-compose.example.yml
-# 참고.
+# 노출해서 개별 서비스를 직접 호출하며 디버깅할 수 있게 한다. 값 채우는 방법을 보여주는 예시는
+# docker-compose.example.yml 참고. 운영 배포용 compose/env 파일은 이 저장소가 아니라 운영
+# 서버에서 별도로 관리한다(원본 레포 통합 시 주의사항은 docs/원본 레포 통합 시 주의점.md 참고).
 #
 # 사용법:
 #   cp .env.example .env   # 필요 시 값 수정

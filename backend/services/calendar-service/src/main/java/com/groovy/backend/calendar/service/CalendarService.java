@@ -18,7 +18,7 @@ import com.groovy.backend.calendar.dto.CalendarCreateRequest;
 import com.groovy.backend.calendar.dto.CalendarEventResponse;
 import com.groovy.backend.calendar.dto.CalendarUpdateRequest;
 import com.groovy.backend.calendar.dto.MyStudyOptionResponse;
-import com.groovy.backend.calendar.exception.ForbiddenException;
+import com.groovy.backend.common.exception.ForbiddenException;
 import com.groovy.backend.calendar.notification.NotificationOutboxPublisher;
 import com.groovy.backend.calendar.notification.ScheduleChangeType;
 import com.groovy.backend.calendar.repository.CalendarRepository;

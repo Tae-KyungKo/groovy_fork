@@ -16,10 +16,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.groovy.backend.client.ResilientCallExecutor;
 import com.groovy.backend.common.response.ApiResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * MSA 전환(calendar-service 추출): groovy(레거시)의 global.client.StudyServiceClient를 그대로
@@ -32,12 +32,15 @@ import lombok.extern.slf4j.Slf4j;
  * 원 요청의 Authorization 헤더를 그대로 study-service에 전달한다 — study-service의
  * "/api/studies/{id}"가 로그인 사용자별로 myApplicationStatus를 채워주므로, 그 값으로
  * "이 유저가 이 스터디 멤버인지"를 판단할 수 있다(별도의 멤버십 확인 API를 새로 만들지 않는다).
+ *
+ * study-service가 다운이 아니라 느려지기만 해도 매 요청이 read-timeout만큼 블로킹되는 걸
+ * 막기 위해 ResilientCallExecutor(CircuitBreaker+Retry)로 각 호출을 감싼다(8번 항목).
  */
-@Slf4j
 @Component
 public class StudyServiceClient {
 
 	private final RestClient restClient;
+	private final ResilientCallExecutor executor;
 
 	public StudyServiceClient(
 		@Value("${study-service.url:http://study-service:8082}") String studyServiceUrl,
@@ -54,24 +57,24 @@ public class StudyServiceClient {
 			.baseUrl(studyServiceUrl)
 			.requestFactory(requestFactory)
 			.build();
+		this.executor = new ResilientCallExecutor("study-service-client");
 	}
 
 	// study-service의 공개 API("/api/studies/{id}")를 그대로 재사용한다. 없는 스터디거나
 	// study-service가 죽어 있으면 빈 Optional을 반환한다 — 호출부가 "존재하지 않는 스터디"로
 	// 처리한다.
 	public Optional<StudyView> getStudy(Long studyId) {
-		try {
-			ApiResponse<StudyView> response = restClient.get()
-				.uri("/api/studies/{id}", studyId)
-				.headers(this::forwardAuthorization)
-				.retrieve()
-				.body(new ParameterizedTypeReference<ApiResponse<StudyView>>() {
-				});
-			return Optional.ofNullable(response == null ? null : response.data());
-		} catch (Exception e) {
-			log.error("study-service 스터디 조회 실패: studyId={}", studyId, e);
-			return Optional.empty();
-		}
+		return executor.execute(
+			() -> {
+				ApiResponse<StudyView> response = restClient.get()
+					.uri("/api/studies/{id}", studyId)
+					.headers(this::forwardAuthorization)
+					.retrieve()
+					.body(new ParameterizedTypeReference<ApiResponse<StudyView>>() {
+					});
+				return Optional.ofNullable(response == null ? null : response.data());
+			},
+			Optional::empty);
 	}
 
 	// 캘린더에서 "스터디 약속" 등록 시 고를 수 있는 "내가 방장이거나 승인되어 속한 스터디" 옵션
@@ -81,35 +84,33 @@ public class StudyServiceClient {
 	public List<StudyOptionView> getMyStudyOptions() {
 		Map<String, StudyOptionView> optionsById = new LinkedHashMap<>();
 
-		try {
-			ApiResponse<List<MyStudyView>> ledResponse = restClient.get()
-				.uri("/api/users/me/studies")
-				.headers(this::forwardAuthorization)
-				.retrieve()
-				.body(new ParameterizedTypeReference<ApiResponse<List<MyStudyView>>>() {
-				});
-			if (ledResponse != null && ledResponse.data() != null) {
-				ledResponse.data().forEach(study -> optionsById.put(study.id(), new StudyOptionView(study.id(), study.title(), true)));
-			}
-		} catch (Exception e) {
-			log.error("study-service 방장 스터디 목록 조회 실패", e);
-		}
+		List<MyStudyView> ledStudies = executor.execute(
+			() -> {
+				ApiResponse<List<MyStudyView>> response = restClient.get()
+					.uri("/api/users/me/studies")
+					.headers(this::forwardAuthorization)
+					.retrieve()
+					.body(new ParameterizedTypeReference<ApiResponse<List<MyStudyView>>>() {
+					});
+				return response == null || response.data() == null ? List.<MyStudyView>of() : response.data();
+			},
+			List::of);
+		ledStudies.forEach(study -> optionsById.put(study.id(), new StudyOptionView(study.id(), study.title(), true)));
 
-		try {
-			ApiResponse<List<MyApplicationView>> applicationsResponse = restClient.get()
-				.uri("/api/users/me/applications")
-				.headers(this::forwardAuthorization)
-				.retrieve()
-				.body(new ParameterizedTypeReference<ApiResponse<List<MyApplicationView>>>() {
-				});
-			if (applicationsResponse != null && applicationsResponse.data() != null) {
-				applicationsResponse.data().stream()
-					.filter(application -> "APPROVED".equals(application.status()))
-					.forEach(application -> optionsById.put(application.studyId(), new StudyOptionView(application.studyId(), application.studyTitle(), false)));
-			}
-		} catch (Exception e) {
-			log.error("study-service 신청 내역 조회 실패", e);
-		}
+		List<MyApplicationView> applications = executor.execute(
+			() -> {
+				ApiResponse<List<MyApplicationView>> response = restClient.get()
+					.uri("/api/users/me/applications")
+					.headers(this::forwardAuthorization)
+					.retrieve()
+					.body(new ParameterizedTypeReference<ApiResponse<List<MyApplicationView>>>() {
+					});
+				return response == null || response.data() == null ? List.<MyApplicationView>of() : response.data();
+			},
+			List::of);
+		applications.stream()
+			.filter(application -> "APPROVED".equals(application.status()))
+			.forEach(application -> optionsById.put(application.studyId(), new StudyOptionView(application.studyId(), application.studyTitle(), false)));
 
 		return List.copyOf(optionsById.values());
 	}
@@ -117,18 +118,17 @@ public class StudyServiceClient {
 	// Calendar가 스터디 일정 변경 알림 수신자(승인된 멤버 전원)를 구할 때 쓴다
 	// (study-service StudyController#getApprovedMemberIds가 소비하는 내부 API).
 	public List<Long> getApprovedMemberUserIds(Long studyId) {
-		try {
-			ApiResponse<List<Long>> response = restClient.get()
-				.uri("/api/studies/{id}/members", studyId)
-				.headers(this::forwardAuthorization)
-				.retrieve()
-				.body(new ParameterizedTypeReference<ApiResponse<List<Long>>>() {
-				});
-			return response == null || response.data() == null ? List.of() : response.data();
-		} catch (Exception e) {
-			log.error("study-service 승인 멤버 목록 조회 실패: studyId={}", studyId, e);
-			return List.of();
-		}
+		return executor.execute(
+			() -> {
+				ApiResponse<List<Long>> response = restClient.get()
+					.uri("/api/studies/{id}/members", studyId)
+					.headers(this::forwardAuthorization)
+					.retrieve()
+					.body(new ParameterizedTypeReference<ApiResponse<List<Long>>>() {
+					});
+				return response == null || response.data() == null ? List.<Long>of() : response.data();
+			},
+			List::of);
 	}
 
 	private void forwardAuthorization(HttpHeaders headers) {

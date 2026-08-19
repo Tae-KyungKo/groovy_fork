@@ -37,6 +37,10 @@ dependencies {
 	// 분리해서 spring-boot-starter-kafka를 써야 한다(legacy build.gradle 주석 참고).
 	implementation 'org.springframework.boot:spring-boot-starter-kafka'
 
+	// AppConfig가 직접 등록하는 구 Jackson(com.fasterxml.jackson) ObjectMapper가 EventEnvelope의
+	// Instant occurredAt을 직렬화/역직렬화하려면 필요하다.
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 	// MSA 전환 Phase 11: JwksKeyLocator(legacy 호출)에 Retry+CircuitBreaker를 건다.
 	// Spring Cloud CircuitBreaker 스타터는 Spring Cloud 자체가 Boot 4.0.7까지만 검증돼 있어
 	// (Phase 5에서 실제로 겪음) 쓰지 않고, resilience4j 코어 라이브러리를 직접 코드로 조립한다 —
@@ -53,6 +57,8 @@ dependencies {
 
 	implementation project(':libs:event-contract')
 	implementation project(':libs:observability')
+	implementation project(':libs:web-common')
+	implementation project(':libs:security-common')
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

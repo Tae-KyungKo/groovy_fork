@@ -39,6 +39,7 @@ dependencies {
 
 	implementation project(':libs:event-contract')
 	implementation project(':libs:observability')
+	implementation project(':libs:web-common')
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

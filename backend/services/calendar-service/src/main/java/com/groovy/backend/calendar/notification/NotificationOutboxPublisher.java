@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.groovy.backend.calendar.outbox.OutboxEventWriter;
+import com.groovy.backend.eventcontract.notification.NotificationPayload;
 
 import lombok.RequiredArgsConstructor;
 

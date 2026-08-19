@@ -8,9 +8,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.groovy.backend.notification.auth.JwtAuthenticationEntryPoint;
-import com.groovy.backend.notification.auth.JwtAuthenticationFilter;
-import com.groovy.backend.notification.auth.TokenProvider;
+import com.groovy.backend.common.auth.JwtAuthenticationEntryPoint;
+import com.groovy.backend.security.JwtAuthenticationFilter;
+import com.groovy.backend.security.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
 

@@ -41,6 +41,11 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    # AppConfig의 kafkaErrorHandler(DeadLetterPublishingRecoverer)가 처리 실패한 메시지를
+    # <topic>.DLT로 재발행할 때 쓴다 — study/calendar/content-service의 producer 설정과 동일.
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:
       # Phase 12: legacy가 실어보낸 traceId를 이어받아 같은 트레이스로 스팬을 이어붙인다.
       observation-enabled: true
@@ -48,12 +53,13 @@ spring:
 server:
   port: 8085
 
-# MSA 전환 Phase 10: 더 이상 JWT_SECRET_KEY(HMAC 공유 시크릿)를 쓰지 않는다. JwksKeyLocator가
-# 이 주소에서 legacy-monolith의 공개키(JWKS)를 가져와 서명을 검증만 한다.
-# Phase 11: 캐시 TTL을 짧게 두면(예: 검증 시) legacy-monolith가 죽어 있는 동안 재시도/서킷
+# MSA 전환 Phase 10: 더 이상 JWT_SECRET_KEY(HMAC 공유 시크릿)를 쓰지 않는다. identity-service가
+# 유일한 JWT 발급자다 — 이 서비스는 검증만 한다(study/calendar/content-service와 동일한 패턴).
+# JwksKeyLocator가 이 주소에서 identity-service의 공개키(JWKS)를 가져온다.
+# Phase 11: 캐시 TTL을 짧게 두면(예: 검증 시) identity-service가 죽어 있는 동안 재시도/서킷
 # 브레이커/폴백 동작을 실제로 관찰할 수 있다. 기본값(5분)은 운영에 적합한 값.
 jwt:
-  jwks-url: ${JWT_JWKS_URL:http://legacy-monolith:8080/.well-known/jwks.json}
+  jwks-url: ${JWT_JWKS_URL:http://identity-service:8081/.well-known/jwks.json}
   jwks-connect-timeout-ms: ${JWT_JWKS_CONNECT_TIMEOUT_MS:2000}
   jwks-read-timeout-ms: ${JWT_JWKS_READ_TIMEOUT_MS:3000}
   jwks-cache-ttl-seconds: ${JWT_JWKS_CACHE_TTL_SECONDS:300}

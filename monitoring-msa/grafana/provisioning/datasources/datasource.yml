@@ -1,6 +1,6 @@
-# MSA 전환 Phase 12: 기존 monitoring/grafana/provisioning/datasources/datasource.yml(Prometheus+Loki)에
-# Tempo를 더한 버전. 원본 파일은 실제 운영 docker-compose.yml이 쓰고 있어 건드리지 않고,
-# 이 검증 스택 전용으로 별도 파일을 둔다. Tempo 필드 구성은 Grafana Tempo 공식 예제
+# MSA 전환 Phase 12: 레거시 모놀리식의 monitoring/grafana/provisioning/datasources/datasource.yml
+# (Prometheus+Loki)에 Tempo를 더한 버전. 레거시 monitoring/ 디렉토리는 MSA 전환 후 완전히
+# 삭제되어 이 파일이 유일한 datasource 설정이다. Tempo 필드 구성은 Grafana Tempo 공식 예제
 # (grafana/tempo repo, example/docker-compose/single-binary/grafana-datasources.yaml)를 그대로 참고.
 apiVersion: 1
 

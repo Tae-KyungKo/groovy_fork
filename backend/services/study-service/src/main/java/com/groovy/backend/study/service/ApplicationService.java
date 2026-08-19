@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.groovy.backend.study.Application;
 import com.groovy.backend.study.ApplicationStatus;
 import com.groovy.backend.study.Study;
-import com.groovy.backend.study.client.UserServiceClient;
+import com.groovy.backend.client.UserServiceClient;
 import com.groovy.backend.study.dto.ApplicationResponse;
 import com.groovy.backend.study.dto.MyApplicationResponse;
 import com.groovy.backend.study.notification.NotificationOutboxPublisher;
