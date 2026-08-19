@@ -1,5 +1,5 @@
 -- MSA 전환 Phase 7(DB per Service): 하나의 MySQL 컨테이너 안에서 스키마 소유권부터 분리한다.
--- MYSQL_DATABASE 환경변수가 groovy_db(legacy-monolith용)는 이미 만들어주므로, 여기서는
+-- legacy-monolith(groovy_db)는 삭제됐다. 여기서는
 -- notification-service 전용 스키마 + 그 스키마에만 접근 가능한 전용 계정을 추가로 만든다.
 --
 -- 비밀번호를 파일에 고정값으로 넣은 건 이 컴포즈 스택이 로컬 검증 전용(볼륨도 없어 매번

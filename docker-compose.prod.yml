@@ -1,230 +1,390 @@
+# Groovy 백엔드 MSA 스택 — 운영 배포용.
+#
+# docker-compose.local.yml과 서비스 구성은 동일하다(백엔드 8개 애플리케이션 컨테이너 +
+# mysql/redis/kafka/tempo/loki/alloy/grafana). 운영 배포에 맞춘 차이는 다음과 같다:
+#   - 모든 컨테이너에 restart: unless-stopped
+#   - api-gateway(8080)/grafana만 호스트에 노출한다 — mysql/kafka/tempo/loki와 개별 백엔드
+#     서비스(identity/study/content/calendar/notification-service)는 컴포즈 내부 네트워크
+#     에서만 접근 가능하다. 모든 도메인 요청은 api-gateway를 거쳐야 한다.
+#   - 비밀값에 안전하지 않은 기본값을 두지 않는다(${VAR:?...} 문법 — .env에 실제 값을 채우지
+#     않으면 기동 자체가 실패한다).
+#   - JWT_JWKS_CACHE_TTL_SECONDS 기본값을 10초(로컬 디버깅용)가 아니라 5분(300초)으로 둔다.
+#
+# frontend/nginx(리버스 프록시)/certbot 통합은 이 파일 범위 밖이다 — 별도로 진행한다.
+# 모든 서비스를 소스에서 직접 빌드한다(context: ./backend) — 서비스별 이미지를 Docker Hub에
+# 미리 빌드·푸시하는 CI가 아직 없기 때문이다(front만 기존 CI로 이미지가 빌드된다).
+#
+# 사용법:
+#   cp .env.example .env   # 실제 비밀값으로 채운 뒤 운영 서버에 배치
+#   docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml ps
+#   docker compose --env-file .env -f docker-compose.prod.yml pull   # (이미지 레지스트리 전환 후)
+
 services:
+
+  # Phase 7: 컨테이너 1개 안에서 스키마 소유권을 분리한다(계획서 Phase 7 원칙 — 처음부터
+  # MySQL 인스턴스를 여러 개 띄우지 않는다). mysql-init/*.sql(docker-entrypoint-initdb.d)이
+  # 서비스별 전용 스키마(notification_db/identity_db/study_db/calendar_db/content_db) + 전용
+  # 계정을 만든다. legacy-monolith가 쓰던 groovy_db는 legacy-monolith 삭제와 함께 없앴다.
   mysql:
     image: mysql:8.0
     container_name: groovy-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in .env}
       TZ: Asia/Seoul
     volumes:
-      - groovy-mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-uroot",
-          "-p${MYSQL_ROOT_PASSWORD}"
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in .env}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - groovy-net
+
   redis:
     image: redis:7-alpine
     container_name: groovy-redis
     restart: unless-stopped
-    expose:
-      - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - groovy-net
 
-  mysqld-exporter:
-    image: prom/mysqld-exporter:latest
-    container_name: groovy-mysqld-exporter
+  # Phase 9: 단일 노드 KRaft 모드(Zookeeper 없음). Kafka 공식 이미지가 기본 지원한다.
+  # study-service/calendar-service/content-service의 OutboxRelay가 여기로 발행하고,
+  # notification-service가 여기서 소비한다.
+  # Phase 10: 클라이언트 리스너를 SASL_PLAINTEXT로 바꿔, 자격증명(username="app") 없는
+  # 클라이언트는 아예 이 브로커에 연결할 수 없게 한다 — "누구나 호출 가능한 상태 아님"을
+  # 네트워크 접근이 아니라 브로커 자체의 인증으로 강제한다. 컨트롤러 리스너는 그대로
+  # PLAINTEXT로 둔다(단일 노드라 브로커간 트래픽이 사실상 없고, 지금 범위는 클라이언트 인증).
+  kafka:
+    image: apache/kafka:latest
+    container_name: groovy-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # 리스너 이름을 "SASL_PLAINTEXT"(프로토콜 이름과 동일)로 쓰면 안 된다 — 실제로 겪은 문제:
+      # 이미지의 env var → 설정 변환이 언더스코어를 전부 점으로 바꿔서
+      # "listener.name.sasl_plaintext..."가 "listener.name.sasl.plaintext..."로 잘못 쪼개진다.
+      # 그래서 리스너 이름은 언더스코어 없는 "CLIENT"로 두고, 보안 프로토콜만 SASL_PLAINTEXT로
+      # 매핑한다(리스너 이름은 그냥 별칭이라 클라이언트는 이 이름을 몰라도 된다).
+      KAFKA_LISTENERS: CLIENT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: CLIENT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,CLIENT:SASL_PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      # 이미지의 configure 스크립트가 SASL 리스너를 감지하면 KAFKA_OPTS가 "설정되어 있기만"
+      # 해도 되는데(내용 무관, ensure()가 unset이면 하드 실패) 실제로 겪은 문제라 채워둔다.
+      # 우리는 KAFKA_LISTENER_NAME_*_SASL_JAAS_CONFIG(env var) 방식을 쓰므로
+      # java.security.auth.login.config 파일 방식은 필요 없다 — 그래서 나오는 경고 메시지는 무해하다.
+      KAFKA_OPTS: -Dfile.encoding=UTF-8
+      # 브로커 자신이 클라이언트로서 쓸 인증정보(username/password)와, 서버로서 받아줄 계정
+      # 목록(user_*)을 함께 선언한다. "app"이 study-service/calendar-service/content-service/
+      # notification-service가 쓰는 계정.
+      KAFKA_LISTENER_NAME_CLIENT_PLAIN_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="broker"
+        password="${KAFKA_BROKER_PASSWORD:?KAFKA_BROKER_PASSWORD must be set in .env}"
+        user_broker="${KAFKA_BROKER_PASSWORD:?KAFKA_BROKER_PASSWORD must be set in .env}"
+        user_app="${KAFKA_APP_PASSWORD:?KAFKA_APP_PASSWORD must be set in .env}";
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # 학습/검증 편의를 위해 자동 생성 허용 — 실제 운영이라면 토픽을 명시적으로 만들고
+      # 파티션 수/보존 정책을 관리해야 한다.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 --command-config /tmp/adminclient.conf || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - ./kafka-init/adminclient.conf:/tmp/adminclient.conf:ro
+    networks:
+      - groovy-net
+
+  # MSA 전환 완료: api-gateway가 모든 도메인 요청을 각 서비스로 직접 라우팅한다
+  # (backend/services/api-gateway/src/main/resources/application.yml 참고). legacy-monolith는
+  # 삭제됐다 — groovy/ 디렉터리 자체가 더 이상 존재하지 않는다.
+
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: groovy-api-gateway
+    restart: unless-stopped
+    depends_on:
+      - notification-service
+      - identity-service
+      - study-service
+      - calendar-service
+      - content-service
+      - tempo
+    environment:
+      # Phase 12: 요청 진입점이라 여기서 트레이스가 시작된다(TracingConfig 참고).
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+    ports:
+      - "${API_GATEWAY_PORT:-8080}:8080"
+    networks:
+      - groovy-net
+
+  # MSA 전환(identity-service 추출): User(인증) + Tag(마스터/선호 태그) 도메인이 이 서비스로
+  # 옮겨왔다. identity-service가 유일한 JWT 발급자다(JwtKeyProvider/JwksController가 여기
+  # 있다) — 나머지 모든 서비스가 이 서비스의 JWKS를 검증에 쓴다(아래 JWT_JWKS_URL 참고).
+  # Phase 7(DB per Service) 패턴 재사용: 전용 스키마(identity_db) + 전용 계정.
+  identity-service:
+    build:
+      context: ./backend
+      dockerfile: services/identity-service/Dockerfile
+    container_name: groovy-identity-service
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
-    command:
-      - "--mysqld.address=mysql:3306"
-      - "--mysqld.username=root"
+      tempo:
+        condition: service_started
     environment:
-      MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    expose:
-      - "9104"
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/identity_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DEV_DB_USERNAME: identity_service
+      SPRING_DEV_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD must be set in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env (e.g. https://your-domain.com)}
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      TZ: Asia/Seoul
+    networks:
+      - groovy-net
 
-  backend:
-    image: bebeghi/groovy-backend:latest
-    container_name: groovy-backend
+  # MSA 전환(study-service 추출): Study/Application/Waitlist(+StudyTag) 도메인이 실제로 이
+  # 서비스로 옮겨왔다. identity-service의 JWKS를 검증에 쓰고(발급자가 아니다), leaderName/
+  # applicantName 조회는 UserServiceClient로 identity-service를 동기 호출한다. 태그 매칭에서
+  # tagIds가 없으면 TagPreferenceClient로 identity-service의 "/api/tags/me"(선호 태그, Tag
+  # 소유권 확정 이후 identity-service 소유)를 호출한다.
+  study-service:
+    build:
+      context: ./backend
+      dockerfile: services/study-service/Dockerfile
+    container_name: groovy-study-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      tempo:
+        condition: service_started
+    environment:
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/study_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DEV_DB_USERNAME: study_service
+      SPRING_DEV_DB_PASSWORD: ${STUDY_DB_PASSWORD:?STUDY_DB_PASSWORD must be set in .env}
+      JWT_JWKS_URL: http://identity-service:8081/.well-known/jwks.json
+      JWT_JWKS_CACHE_TTL_SECONDS: ${JWT_JWKS_CACHE_TTL_SECONDS:-300}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env (e.g. https://your-domain.com)}
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="app"
+        password="${KAFKA_APP_PASSWORD:?KAFKA_APP_PASSWORD must be set in .env}";
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      TZ: Asia/Seoul
+    networks:
+      - groovy-net
+
+  # MSA 전환(content-service 추출): Memoir(+댓글/좋아요) 도메인이 실제로 이 서비스로 옮겨왔다.
+  # identity-service의 JWKS를 검증에 쓰고(발급자가 아니다), 스터디 멤버십 확인·요약 정보·
+  # "내 스터디 옵션" 조회·경험치 적립은 StudyServiceClient로 study-service를, 작성자/댓글
+  # 작성자 이름 조회는 UserServiceClient로 identity-service를 동기 호출한다. 댓글/좋아요
+  # 알림은 study-service/calendar-service와 동일한 Outbox+Kafka 패턴으로 발행한다.
+  content-service:
+    build:
+      context: ./backend
+      dockerfile: services/content-service/Dockerfile
+    container_name: groovy-content-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      study-service:
+        condition: service_started
+      tempo:
+        condition: service_started
+    environment:
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/content_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DEV_DB_USERNAME: content_service
+      SPRING_DEV_DB_PASSWORD: ${CONTENT_DB_PASSWORD:?CONTENT_DB_PASSWORD must be set in .env}
+      JWT_JWKS_URL: http://identity-service:8081/.well-known/jwks.json
+      JWT_JWKS_CACHE_TTL_SECONDS: ${JWT_JWKS_CACHE_TTL_SECONDS:-300}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env (e.g. https://your-domain.com)}
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      STUDY_SERVICE_URL: http://study-service:8082
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="app"
+        password="${KAFKA_APP_PASSWORD:?KAFKA_APP_PASSWORD must be set in .env}";
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      TZ: Asia/Seoul
+    networks:
+      - groovy-net
+
+  # MSA 전환(calendar-service 추출): Calendar(개인 일정 + 스터디 약속) 도메인이 실제로 이
+  # 서비스로 옮겨왔다. identity-service의 JWKS를 검증에 쓰고(발급자가 아니다), 스터디 멤버십
+  # 확인·승인 멤버 목록·"내 스터디 옵션" 조회는 StudyServiceClient로 study-service를 동기
+  # 호출한다(groovy가 이미 쓰던 것과 동일한 계약, study-service 추출 때 처음 생김).
+  calendar-service:
+    build:
+      context: ./backend
+      dockerfile: services/calendar-service/Dockerfile
+    container_name: groovy-calendar-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      study-service:
+        condition: service_started
+      tempo:
+        condition: service_started
+    environment:
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/calendar_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DEV_DB_USERNAME: calendar_service
+      SPRING_DEV_DB_PASSWORD: ${CALENDAR_DB_PASSWORD:?CALENDAR_DB_PASSWORD must be set in .env}
+      JWT_JWKS_URL: http://identity-service:8081/.well-known/jwks.json
+      JWT_JWKS_CACHE_TTL_SECONDS: ${JWT_JWKS_CACHE_TTL_SECONDS:-300}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env (e.g. https://your-domain.com)}
+      STUDY_SERVICE_URL: http://study-service:8082
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="app"
+        password="${KAFKA_APP_PASSWORD:?KAFKA_APP_PASSWORD must be set in .env}";
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      TZ: Asia/Seoul
+    networks:
+      - groovy-net
+
+  # Phase 6에서 첫 번째로 추출된 서비스, Phase 7에서 자기 스키마(notification_db)와 그
+  # 스키마에만 권한이 있는 전용 계정(notification_service)을 갖는다 — 다른 서비스와 더 이상
+  # DB 계정도, 스키마도 공유하지 않는다. 자체 Redis pub/sub + 구독 티켓 저장은 그대로.
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: services/notification-service/Dockerfile
+    container_name: groovy-notification-service
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+      tempo:
+        condition: service_started
     environment:
-      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-      SPRING_DEV_DB_USERNAME: root
-      SPRING_DEV_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      SERVER_PORT: 8080
-      DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-30}
-      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-10}
+      SPRING_DEV_DB_URL: jdbc:mysql://mysql:3306/notification_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+      SPRING_DEV_DB_USERNAME: notification_service
+      SPRING_DEV_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD must be set in .env}
+      # MSA 전환(identity-service 추출): identity-service가 유일한 JWT 발급자다 —
+      # JwksKeyLocator가 identity-service의 공개키로 검증만 한다.
+      JWT_JWKS_URL: http://identity-service:8081/.well-known/jwks.json
+      # Phase 11: 이 검증 스택에서는 캐시 TTL을 짧게 둬서 identity-service가 죽어 있는 동안
+      # Retry/CircuitBreaker/Fallback이 실제로 발동하는 걸 재현하기 쉽게 한다(운영 기본값은 5분).
+      JWT_JWKS_CACHE_TTL_SECONDS: ${JWT_JWKS_CACHE_TTL_SECONDS:-300}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      # mysql 컨테이너만 Asia/Seoul이고 backend는 기본값(UTC)이라, LocalDateTime.now() 기반
-      # 타임스탬프(알림 생성시각 등)가 실제 시각보다 9시간 늦게 찍히던 문제의 원인이었다.
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="app"
+        password="${KAFKA_APP_PASSWORD:?KAFKA_APP_PASSWORD must be set in .env}";
+      # Phase 12: 발행자(study/calendar/content-service)가 Kafka로 실어보낸 traceId를
+      # 이어받아 같은 트레이스로 스팬을 잇는다.
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
       TZ: Asia/Seoul
-    expose:
-      - "8080"
+    networks:
+      - groovy-net
 
-  frontend:
-    image: bebeghi/groovy-frontend:latest
-    container_name: groovy-frontend
-    restart: unless-stopped
-    expose:
-      - "5173"
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+  # --- Phase 12: 분산 Observability(트레이싱). 기존 monitoring/ 스택(Loki/Alloy)은 스택에
+  # --- 상관없이 그대로 재사용 가능해서(Alloy가 Docker 소켓으로 "모든" 컨테이너를 자동 탐지) 원본
+  # --- 파일을 읽기 전용으로 그대로 마운트한다. Grafana 프로비저닝(Tempo 데이터소스 추가)과
+  # --- Tempo 설정만 monitoring-msa/에 새로 둔다 — 원본 monitoring/은 기존 docker-compose.yml이
+  # --- 쓰고 있어 건드리지 않는다.
 
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: groovy-nginx
+  tempo:
+    image: grafana/tempo:latest
+    container_name: groovy-tempo
     restart: unless-stopped
-    depends_on:
-      # 인증서 생성시 backend 컨테이너는 잠시 중지되어야 하므로
-      # service_healthy 대신 service_started로 변경
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_started
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+    command: ["-config.file=/etc/tempo.yaml"]
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    command: >
-      /bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'
+      - ./monitoring-msa/tempo/tempo.yaml:/etc/tempo.yaml:ro
+    networks:
+      - groovy-net
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
-    container_name: groovy-cadvisor
+  loki:
+    image: grafana/loki:latest
+    container_name: groovy-loki
     restart: unless-stopped
-    privileged: true
+    command: ["-config.file=/etc/loki/config.yaml"]
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - ./monitoring/loki/config.yaml:/etc/loki/config.yaml:ro
+    networks:
+      - groovy-net
+
+  # notification-service/api-gateway 등 각 서비스의 JSON 구조화 로그(stdout)를 컨테이너
+  # 이름 기반으로 자동 수집한다 — 각 서비스에 로그 수집용 설정을 따로 추가할 필요가 없다.
+  alloy:
+    image: grafana/alloy:latest
+    container_name: groovy-alloy
+    restart: unless-stopped
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /sys:/sys:ro
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
-    expose:
-      - "8080"
-
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: groovy-alertmanager
-    restart: unless-stopped
-    ports:
-      - "${ALERTMANAGER_PORT:-9093}:9093"
-    volumes:
-      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
-      - groovy--data:/alertmanager
-    command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--storage.path=/alertmanager"
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: groovy-prometheus
-    restart: unless-stopped
     depends_on:
-      - backend
-      - cadvisor
-      - alertmanager
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
-    volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
-      - groovy-prometheus-data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
+      - loki
+    networks:
+      - groovy-net
 
   grafana:
     image: grafana/grafana:latest
     container_name: groovy-grafana
     restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./monitoring-msa/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
-      - prometheus
+      - tempo
+      - loki
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-    volumes:
-      - groovy-grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - groovy-net
 
-  loki:
-    image: grafana/loki:2.9.1
-    container_name: groovy-loki
-    command: -config.file=/etc/loki/local-config.yaml
-    ports:
-      - "${LOKI_PORT:-3100}:3100"
-    volumes:
-      - ./monitoring/loki/config.yaml:/etc/loki/local-config.yaml
-      - groovy-loki-data:/loki
-    restart: unless-stopped
-
-  alloy:
-    image: grafana/alloy:v1.1.1
-    container_name: groovy-alloy
-    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
-    volumes:
-      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "${ALLOY_PORT:-12345}:12345"
-    depends_on:
-      - loki
-    restart: unless-stopped
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: groovy-node-exporter
-    restart: unless-stopped
-    pid: host
-    ports:
-      - "${NODE_EXPORTER_PORT:-9100}:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
-
-  certbot:
-    container_name: groovy-certbot
-    image: certbot/certbot
-    restart: unless-stopped
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
-    entrypoint: >
-      /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'
-
-volumes:
-  groovy-mysql-data:
-  groovy-prometheus-data:
-  groovy-grafana-data:
-  groovy-loki-data:
-  groovy--data:
+networks:
+  groovy-net:
+    driver: bridge
