@@ -48,7 +48,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {}
           },
@@ -90,7 +90,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "rate(jvm_gc_pause_seconds_sum{application=\"$application\", instance=\"$instance\"}[1m])/rate(jvm_gc_pause_seconds_count{application=\"$application\", instance=\"$instance\"}[1m])",
@@ -112,7 +112,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_gc_pause_seconds_max{application=\"$application\", instance=\"$instance\"}",
@@ -220,7 +220,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "system_cpu_usage{application=\"$application\", instance=\"$instance\"}",
@@ -243,7 +243,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_cpu_usage{application=\"$application\", instance=\"$instance\"}",
@@ -264,7 +264,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "avg_over_time(process_cpu_usage{application=\"$application\", instance=\"$instance\"}[15m])",
@@ -386,7 +386,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\"}[1m]))",
@@ -492,7 +492,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\", status=~\"5..\"}[1m]))",
@@ -601,7 +601,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(rate(http_server_requests_seconds_sum{application=\"$application\", instance=\"$instance\", status!~\"5..\"}[1m]))/sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\", status!~\"5..\"}[1m]))",
@@ -622,7 +622,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "max(http_server_requests_seconds_max{application=\"$application\", instance=\"$instance\", status!~\"5..\"})",
@@ -728,7 +728,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "tomcat_threads_busy_threads{application=\"$application\", instance=\"$instance\"}",
@@ -749,7 +749,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "tomcat_threads_current_threads{application=\"$application\", instance=\"$instance\"}",
@@ -770,7 +770,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "tomcat_threads_config_max_threads{application=\"$application\", instance=\"$instance\"}",
@@ -791,7 +791,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jetty_threads_busy{application=\"$application\", instance=\"$instance\"}",
@@ -812,7 +812,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jetty_threads_current{application=\"$application\", instance=\"$instance\"}",
@@ -833,7 +833,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jetty_threads_config_max{application=\"$application\", instance=\"$instance\"}",
@@ -940,7 +940,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_threads_states_threads{application=\"$application\", instance=\"$instance\"}",
@@ -1054,7 +1054,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_buffer_memory_used_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_buffer_pool\"}",
@@ -1075,7 +1075,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_buffer_total_capacity_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_buffer_pool\"}",
@@ -1096,7 +1096,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_buffer_count_buffers{application=\"$application\", instance=\"$instance\", id=~\"$jvm_buffer_pool\"}",
@@ -1214,7 +1214,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=\"$application\", instance=\"$instance\"}[1m])) by (application, instance) / on(application, instance) system_cpu_count",
@@ -1322,7 +1322,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
@@ -1345,7 +1345,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
@@ -1367,7 +1367,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
@@ -1487,7 +1487,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
@@ -1511,7 +1511,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
@@ -1533,7 +1533,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
@@ -1653,7 +1653,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\"})",
@@ -1676,7 +1676,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\"})",
@@ -1698,7 +1698,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\"})",
@@ -1820,7 +1820,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_heap\"}",
@@ -1844,7 +1844,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_heap\"}",
@@ -1868,7 +1868,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_heap\"}",
@@ -1992,7 +1992,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_threads_live_threads{application=\"$application\", instance=\"$instance\"}",
@@ -2015,7 +2015,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_threads_daemon_threads{application=\"$application\", instance=\"$instance\"}",
@@ -2038,7 +2038,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_threads_peak_threads{application=\"$application\", instance=\"$instance\"}",
@@ -2060,7 +2060,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_threads{application=\"$application\", instance=\"$instance\"}",
@@ -2182,7 +2182,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_classes_loaded_classes{application=\"$application\", instance=\"$instance\"}",
@@ -2303,7 +2303,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "delta(jvm_classes_loaded_classes{application=\"$application\",instance=\"$instance\"}[1m])",
@@ -2425,7 +2425,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_files_open_files{application=\"$application\", instance=\"$instance\"}",
@@ -2448,7 +2448,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_files_max_files{application=\"$application\", instance=\"$instance\"}",
@@ -2570,7 +2570,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_uptime_seconds{application=\"$application\", instance=\"$instance\"}",
@@ -2690,7 +2690,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})*100/sum(jvm_memory_max_bytes{application=\"$application\",instance=\"$instance\", area=\"heap\"})",
@@ -2808,7 +2808,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})*100/sum(jvm_memory_max_bytes{application=\"$application\",instance=\"$instance\", area=\"nonheap\"})",
@@ -2936,7 +2936,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_nonheap\"}",
@@ -2960,7 +2960,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_nonheap\"}",
@@ -2984,7 +2984,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", id=~\"$jvm_memory_pool_nonheap\"}",
@@ -3108,7 +3108,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_memory_vss_bytes{application=\"$application\", instance=\"$instance\"}",
@@ -3131,7 +3131,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_memory_rss_bytes{application=\"$application\", instance=\"$instance\"}",
@@ -3152,7 +3152,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_memory_swap_bytes{application=\"$application\", instance=\"$instance\"}",
@@ -3173,7 +3173,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_memory_rss_bytes{application=\"$application\", instance=\"$instance\"} + process_memory_swap_bytes{application=\"$application\", instance=\"$instance\"}",
@@ -3293,7 +3293,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "increase(logback_events_total{application=\"$application\", instance=\"$instance\"}[1m])",
@@ -3436,7 +3436,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "process_start_time_seconds{application=\"$application\", instance=\"$instance\"}*1000",
@@ -3555,7 +3555,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "system_load_average_1m{application=\"$application\", instance=\"$instance\"}",
@@ -3578,7 +3578,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "system_cpu_count{application=\"$application\", instance=\"$instance\"}",
@@ -3699,7 +3699,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "rate(jvm_gc_pause_seconds_count{application=\"$application\", instance=\"$instance\"}[1m])",
@@ -3806,7 +3806,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "rate(jvm_gc_memory_allocated_bytes_total{application=\"$application\", instance=\"$instance\"}[1m])",
@@ -3828,7 +3828,7 @@
                       "group": "",
                       "version": "v0",
                       "datasource": {
-                        "name": "${DS_PROMETHEUS}"
+                        "name": "prometheus"
                       },
                       "spec": {
                         "expr": "rate(jvm_gc_memory_promoted_bytes_total{application=\"$application\", instance=\"$instance\"}[1m])",
@@ -4463,7 +4463,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {
               "__legacyStringValue": "label_values(application)"
@@ -4494,7 +4494,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {
               "__legacyStringValue": "label_values(jvm_memory_used_bytes{application=\"$application\"}, instance)"
@@ -4525,7 +4525,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {
               "__legacyStringValue": "label_values(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"},id)"
@@ -4556,7 +4556,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {
               "__legacyStringValue": "label_values(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"},id)"
@@ -4587,7 +4587,7 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "PBFA97CFB590B2093"
+              "name": "prometheus"
             },
             "spec": {
               "__legacyStringValue": "label_values(jvm_buffer_memory_used_bytes{application=\"$application\", instance=\"$instance\"},id)"

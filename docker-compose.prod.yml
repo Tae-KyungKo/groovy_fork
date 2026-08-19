@@ -327,11 +327,9 @@ services:
     networks:
       - groovy-net
 
-  # --- Phase 12: 분산 Observability(트레이싱). 기존 monitoring/ 스택(Loki/Alloy)은 스택에
-  # --- 상관없이 그대로 재사용 가능해서(Alloy가 Docker 소켓으로 "모든" 컨테이너를 자동 탐지) 원본
-  # --- 파일을 읽기 전용으로 그대로 마운트한다. Grafana 프로비저닝(Tempo 데이터소스 추가)과
-  # --- Tempo 설정만 monitoring-msa/에 새로 둔다 — 원본 monitoring/은 기존 docker-compose.yml이
-  # --- 쓰고 있어 건드리지 않는다.
+  # --- Phase 12: 분산 Observability(트레이싱). Loki/Alloy는 스택에 상관없이 그대로 재사용
+  # --- 가능해서(Alloy가 Docker 소켓으로 "모든" 컨테이너를 자동 탐지) monitoring-msa/에 옮긴
+  # --- 원본 파일을 읽기 전용으로 그대로 마운트한다.
 
   tempo:
     image: grafana/tempo:latest
@@ -349,7 +347,7 @@ services:
     restart: unless-stopped
     command: ["-config.file=/etc/loki/config.yaml"]
     volumes:
-      - ./monitoring/loki/config.yaml:/etc/loki/config.yaml:ro
+      - ./monitoring-msa/loki/config.yaml:/etc/loki/config.yaml:ro
     networks:
       - groovy-net
 
@@ -361,7 +359,7 @@ services:
     restart: unless-stopped
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
     volumes:
-      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./monitoring-msa/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - loki

@@ -322,11 +322,9 @@ services:
     networks:
       - groovy-example-net
 
-  # --- Phase 12: 분산 Observability(트레이싱). 기존 monitoring/ 스택(Loki/Alloy)은 스택에
-  # --- 상관없이 그대로 재사용 가능해서(Alloy가 Docker 소켓으로 "모든" 컨테이너를 자동 탐지) 원본
-  # --- 파일을 읽기 전용으로 그대로 마운트한다. Grafana 프로비저닝(Tempo 데이터소스 추가)과
-  # --- Tempo 설정만 monitoring-msa/에 새로 둔다 — 원본 monitoring/은 기존 docker-compose.yml이
-  # --- 쓰고 있어 건드리지 않는다.
+  # --- Phase 12: 분산 Observability(트레이싱). Loki/Alloy는 스택에 상관없이 그대로 재사용
+  # --- 가능해서(Alloy가 Docker 소켓으로 "모든" 컨테이너를 자동 탐지) monitoring-msa/에 옮긴
+  # --- 원본 파일을 읽기 전용으로 그대로 마운트한다.
 
   tempo:
     image: grafana/tempo:latest
@@ -344,7 +342,7 @@ services:
     container_name: groovy-loki-example
     command: ["-config.file=/etc/loki/config.yaml"]
     volumes:
-      - ./monitoring/loki/config.yaml:/etc/loki/config.yaml:ro
+      - ./monitoring-msa/loki/config.yaml:/etc/loki/config.yaml:ro
     ports:
       - "${LOKI_PORT:-3100}:3100"
     networks:
@@ -357,7 +355,7 @@ services:
     container_name: groovy-alloy-example
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
     volumes:
-      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./monitoring-msa/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - loki
@@ -375,10 +373,105 @@ services:
     depends_on:
       - tempo
       - loki
+      - prometheus
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     networks:
       - groovy-example-net
+
+  # --- 레거시 모놀리식 시절 monitoring/ 스택이 제공하던 메트릭 정보(JVM/HTTP, 컨테이너 리소스,
+  # --- 호스트 리소스, MySQL, Slack 알림)를 MSA 스택에도 동일하게 제공한다. prometheus.yml은
+  # --- 서비스별 job으로 나뉘어 있다.
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: groovy-prometheus-example
+    depends_on:
+      - cadvisor
+      - mysqld-exporter
+      - alertmanager
+    volumes:
+      - ./monitoring-msa/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring-msa/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - groovy-msa-prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    networks:
+      - groovy-example-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: groovy-cadvisor-example
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+    expose:
+      - "8080"
+    networks:
+      - groovy-example-net
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: groovy-node-exporter-example
+    pid: host
+    expose:
+      - "9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - groovy-example-net
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: groovy-mysqld-exporter-example
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command:
+      - "--mysqld.address=mysql:3306"
+      - "--mysqld.username=root"
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+    expose:
+      - "9104"
+    networks:
+      - groovy-example-net
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: groovy-alertmanager-example
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/slack_webhook_url:/tmp/slack_webhook_url:ro
+      - groovy-msa-alertmanager-data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    networks:
+      - groovy-example-net
+
+volumes:
+  groovy-msa-prometheus-data:
+  groovy-msa-alertmanager-data:
 
 networks:
   groovy-example-net:

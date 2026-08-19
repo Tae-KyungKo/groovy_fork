@@ -70,7 +70,7 @@ docker compose --env-file .env -f docker-compose.prod.yml up -d --build
 | 서비스 | 역할 | 컨테이너 포트 | 호스트 포트(local/example) | prod 노출 |
 |---|---|---|---|---|
 | `tempo` | 분산 트레이싱 백엔드(OTLP 수신) | 3200 | `TEMPO_QUERY_PORT`=3200 | 내부 전용 |
-| `loki` | 로그 저장/검색(`monitoring/` 설정 재사용) | 3100 | `LOKI_PORT`=3100 | 내부 전용 |
+| `loki` | 로그 저장/검색(레거시 모놀리식 `monitoring/`에서 옮겨온 설정 재사용) | 3100 | `LOKI_PORT`=3100 | 내부 전용 |
 | `alloy` | Docker 컨테이너 stdout을 자동 수집해 Loki로 전송 | - | 미노출 | 내부 전용 |
 | `grafana` | Tempo+Loki 데이터소스로 트레이스/로그 조회 | 3000 | `GRAFANA_PORT`=3000 | **P** |
 
