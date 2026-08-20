@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 8: 서비스 간 동기 통신 구축
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 8
-> 선행 문서: [`Groovy_MSA_Phase7_DatabasePerService.md`](./Groovy_MSA_Phase7_DatabasePerService.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 8
+> 선행 문서: [`Groovy_MSA_Phase7_DatabasePerService.md`](Groovy_MSA_Phase7_DatabasePerService.md)
 > 목표: "즉시 응답이 필요한" 서비스 간 통신을 REST로 구축하고, 반드시 타임아웃을 명시한다.
 
 ## 1. 범위 — 새 호출을 만들지 않고 기존 호출을 완성했다

@@ -1,6 +1,6 @@
 # Groovy MSA 구조 개요 및 실행 방법
 
-> 상세 설계/검증 근거는 [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md)와 각 Phase 문서
+> 상세 설계/검증 근거는 [`Groovy_MSA_전환계획.md`](순서1/Groovy_MSA_전환계획.md)와 각 Phase 문서
 > (`Groovy_MSA_Phase0_의존성분석.md` ~ `Groovy_MSA_Phase13_테스트전략확장.md`) 참고. 이 문서는
 > "지금 뭐가 어떻게 떠 있는지"만 간단히 정리한다.
 

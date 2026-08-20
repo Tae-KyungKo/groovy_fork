@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 7: Database per Service (논리적 분리부터)
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 7
-> 선행 문서: [`Groovy_MSA_Phase6_NotificationExtraction.md`](./Groovy_MSA_Phase6_NotificationExtraction.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 7
+> 선행 문서: [`Groovy_MSA_Phase6_NotificationExtraction.md`](Groovy_MSA_Phase6_NotificationExtraction.md)
 > 목표: 하나의 MySQL 컨테이너 안에서 서비스별 스키마 소유권부터 분리한다(인스턴스를 여러 개
 > 띄우지 않는다).
 

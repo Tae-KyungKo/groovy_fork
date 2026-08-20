@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 6: 첫 번째 서비스 추출 (Notification)
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 6
-> 선행 문서: [`Groovy_MSA_Phase5_ApiGateway.md`](./Groovy_MSA_Phase5_ApiGateway.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 6
+> 선행 문서: [`Groovy_MSA_Phase5_ApiGateway.md`](Groovy_MSA_Phase5_ApiGateway.md)
 > 목표: 가장 리스크가 낮은 도메인(Notification)을 실제로 별도 프로세스로 옮겨 "서비스 분리"를
 > 실전 검증한다. 지금까지는 전부 골격/구조 작업이었고, 이번이 처음으로 실제 도메인 코드와
 > DB 접근이 두 개의 독립 배포 단위로 갈라지는 단계다.

@@ -38,7 +38,7 @@ Domain: StudyApplicationService
 - [x] 6개 도메인의 의존성 표 작성 완료
 - [x] "cross-domain repository 직접 접근" 목록이 눈에 보이는 문서로 정리됨 (예: Study → UserRepository, Memoir → StudyRepository 등)
 
-> 산출물: [`Groovy_MSA_Phase0_의존성분석.md`](./Groovy_MSA_Phase0_의존성분석.md)
+> 산출물: [`Groovy_MSA_Phase0_의존성분석.md`](Groovy_MSA_Phase0_의존성분석.md)
 
 ---
 
@@ -75,7 +75,7 @@ Calendar → Study Entity 참조 금지
 - [x] cross-domain repository/entity 직접 참조가 0건 (ArchUnit 규칙 통과)
 - [x] 도메인 간 통신이 전부 Application Event 또는 명시적 인터페이스를 거침
 
-> 산출물: [`Groovy_MSA_Phase1_ModularMonolith.md`](./Groovy_MSA_Phase1_ModularMonolith.md)
+> 산출물: [`Groovy_MSA_Phase1_ModularMonolith.md`](Groovy_MSA_Phase1_ModularMonolith.md)
 
 > **왜 이 단계가 먼저인가**: 지금까지 배운 "DB per Service"는 물리적 DB 분리보다 먼저 "코드가 남의 데이터에 직접 접근하지 않는다"는 습관을 들이는 게 우선입니다. 코드에서부터 안 되면 서비스로 쪼개도 API 너머로 여전히 강결합됩니다.
 
@@ -100,7 +100,7 @@ Tag는 규모가 작으므로 초기에는 study-service 내부에 붙여두고,
 > **재검토 (Phase 1 착수 전)**: `StudyTag`는 Study 소유, `UserTag`(선호 태그)는 User 소유로 실제로는
 > 소유권이 갈린다. "Tag를 study-service에 흡수"하면 identity-service가 선호 태그 조회를 위해
 > study-service를 호출해야 하는 역전이 생기므로, 최종 배치는 이 Phase에서 확정하지 않고 Tag 마스터
-> 데이터(참조 데이터)를 어떻게 공유할지와 함께 결정한다. 상세: [`Groovy_MSA_도메인경계_재검토.md`](./Groovy_MSA_도메인경계_재검토.md)
+> 데이터(참조 데이터)를 어떻게 공유할지와 함께 결정한다. 상세: [`Groovy_MSA_도메인경계_재검토.md`](../Groovy_MSA_도메인경계_재검토.md)
 
 ### HTTP Contract (동기 통신, Phase 7에서 사용)
 
@@ -137,7 +137,7 @@ UserDeleted
 - [x] Internal API 명세 문서화 (누가 누구를 호출하는지)
 - [x] Event 목록 및 스키마 초안 확정 (3단계에서 배운 Event Schema 원칙 적용: 버전 필드 포함, optional 필드 위주 설계)
 
-> 산출물: [`Groovy_MSA_Phase2_서비스경계와Contract.md`](./Groovy_MSA_Phase2_서비스경계와Contract.md)
+> 산출물: [`Groovy_MSA_Phase2_서비스경계와Contract.md`](Groovy_MSA_Phase2_서비스경계와Contract.md)
 
 ---
 
@@ -183,7 +183,7 @@ Groovy/
 - [x] 각 서비스가 독립적으로 `./gradlew :services:notification-service:bootRun` 가능
 - [x] `libs/event-contract`에 순수 DTO만 존재 (비즈니스 로직 없음)
 
-> 산출물: [`Groovy_MSA_Phase3_GradleMultiProject.md`](./Groovy_MSA_Phase3_GradleMultiProject.md)
+> 산출물: [`Groovy_MSA_Phase3_GradleMultiProject.md`](Groovy_MSA_Phase3_GradleMultiProject.md)
 
 ---
 
@@ -228,7 +228,7 @@ Compose 내부에서는 서비스명(`notification-service`, `mysql` 등)이 곧
 - [x] `docker-compose up` 시 레거시 모놀리스 + 신규 빈 서비스 컨테이너가 동시에 뜸
 - [x] 컨테이너 간 이름 기반 통신 확인 (`docker exec`로 curl 테스트)
 
-> 산출물: [`Groovy_MSA_Phase4_DockerComposeSkeleton.md`](./Groovy_MSA_Phase4_DockerComposeSkeleton.md)
+> 산출물: [`Groovy_MSA_Phase4_DockerComposeSkeleton.md`](Groovy_MSA_Phase4_DockerComposeSkeleton.md)
 
 ---
 
@@ -258,7 +258,7 @@ Spring Cloud Gateway 사용 권장. JWT 검증(2단계에서 배운 Gateway 역�
 - [x] Gateway가 떠 있고, 모든 요청이 일단 레거시 모놀리스로 라우팅됨 (기능 변화 없음, 구조만 추가)
 - [ ] nginx는 Gateway 앞단의 SSL 종료/정적 파일 서빙 역할로 재정의 — 보류(실제 배포 전환 시점에 처리, 근거는 산출물 문서 §5 참고)
 
-> 산출물: [`Groovy_MSA_Phase5_ApiGateway.md`](./Groovy_MSA_Phase5_ApiGateway.md)
+> 산출물: [`Groovy_MSA_Phase5_ApiGateway.md`](Groovy_MSA_Phase5_ApiGateway.md)
 
 ---
 
@@ -291,7 +291,7 @@ Phase 9(메시지 브로커)가 아직 없다면, 초기에는 **동기 REST 호
 - [x] Gateway에서 `/notifications/**`가 신규 서비스로 라우팅됨
 - [x] 기존 기능(SSE 알림) 동작 회귀 없음 확인
 
-> 산출물: [`Groovy_MSA_Phase6_NotificationExtraction.md`](./Groovy_MSA_Phase6_NotificationExtraction.md)
+> 산출물: [`Groovy_MSA_Phase6_NotificationExtraction.md`](Groovy_MSA_Phase6_NotificationExtraction.md)
 
 ---
 
@@ -318,7 +318,7 @@ MySQL (컨테이너 1개)
 - [x] 코드에서 cross-schema JOIN이 물리적으로 실행 불가능함 확인 (권한 에러 발생 테스트)
 - [x] FK 제약 제거 및 애플리케이션 레벨 검증으로 대체
 
-> 산출물: [`Groovy_MSA_Phase7_DatabasePerService.md`](./Groovy_MSA_Phase7_DatabasePerService.md)
+> 산출물: [`Groovy_MSA_Phase7_DatabasePerService.md`](Groovy_MSA_Phase7_DatabasePerService.md)
 > 범위: 실제로 추출된 notification-service만 물리 분리. User/Study/Memoir/Calendar는 각 도메인의
 > 서비스 추출 시점에 함께 진행(근거는 산출물 문서 §1).
 
@@ -345,7 +345,7 @@ OpenFeign은 여전히 동작하지만 Spring 공식 문서가 feature-complete�
 - [x] Phase 2에서 정의한 Internal API 1~2개가 실제로 서비스 간 호출됨
 - [x] Timeout 설정 존재 (기본값 방치 금지 — Phase 11 Resilience의 최소 전제조건)
 
-> 산출물: [`Groovy_MSA_Phase8_SynchronousCommunication.md`](./Groovy_MSA_Phase8_SynchronousCommunication.md)
+> 산출물: [`Groovy_MSA_Phase8_SynchronousCommunication.md`](Groovy_MSA_Phase8_SynchronousCommunication.md)
 
 ---
 
@@ -382,7 +382,7 @@ public void approve() {
 - [x] 강제로 Kafka 컨테이너를 잠깐 내렸다 올려도 이벤트 유실 없음 확인 (재시도 검증)
 - [x] 동일 이벤트를 의도적으로 2번 보내도 Notification이 중복 생성 안 됨 (Idempotency 검증)
 
-> 산출물: [`Groovy_MSA_Phase9_MessageBrokerOutbox.md`](./Groovy_MSA_Phase9_MessageBrokerOutbox.md)
+> 산출물: [`Groovy_MSA_Phase9_MessageBrokerOutbox.md`](Groovy_MSA_Phase9_MessageBrokerOutbox.md)
 > 브로커: Kafka(사용자 지정)
 
 ---
@@ -407,7 +407,7 @@ identity-service (Private Key로 JWT 서명)
 - [x] Gateway 또는 각 서비스가 HMAC 공유 secret이 아닌 JWKS 기반으로 검증
 - [x] 서비스 간 내부 API 호출에 별도 인증 메커니즘 존재 (누구나 호출 가능한 상태 아님)
 
-> 산출물: [`Groovy_MSA_Phase10_AuthRedesign.md`](./Groovy_MSA_Phase10_AuthRedesign.md)
+> 산출물: [`Groovy_MSA_Phase10_AuthRedesign.md`](Groovy_MSA_Phase10_AuthRedesign.md)
 
 ---
 
@@ -425,7 +425,7 @@ Spring Cloud CircuitBreaker(Resilience4j 기반) 적용. 특히 주의할 점: T
 - [x] Phase 8에서 만든 동기 호출에 Timeout, Retry, Circuit Breaker 적용
 - [x] 의도적으로 study-service를 죽인 상태에서 content-service가 전체 장애로 번지지 않고 Fallback 동작 확인
 
-> 산출물: [`Groovy_MSA_Phase11_Resilience.md`](./Groovy_MSA_Phase11_Resilience.md)
+> 산출물: [`Groovy_MSA_Phase11_Resilience.md`](Groovy_MSA_Phase11_Resilience.md)
 > 범위: 대상 서비스는 study/content가 아니라 legacy-monolith/notification-service로 치환(근거는 산출물 문서 §1)
 
 ---
@@ -445,7 +445,7 @@ OpenTelemetry의 Context Propagation으로 traceId/spanId/parentSpanId를 서비
 - [x] 하나의 요청이 여러 서비스를 거칠 때 동일 traceId로 Grafana(Tempo 등)에서 추적 가능
 - [x] 로그에 traceId가 포함되어 Loki에서 특정 요청의 전체 흐름 검색 가능
 
-> 산출물: [`Groovy_MSA_Phase12_분산Observability.md`](./Groovy_MSA_Phase12_분산Observability.md)
+> 산출물: [`Groovy_MSA_Phase12_분산Observability.md`](Groovy_MSA_Phase12_분산Observability.md)
 
 ---
 
@@ -464,7 +464,7 @@ Unit Test → Component Test → Integration Test → Contract Test
 - [x] 서비스 간 API 1개 이상에 대해 Contract Test 존재
 - [x] Event 스키마 변경 시 Consumer 쪽 테스트가 깨지는 걸 CI에서 감지 가능
 
-> 산출물: [`Groovy_MSA_Phase13_테스트전략확장.md`](./Groovy_MSA_Phase13_테스트전략확장.md)
+> 산출물: [`Groovy_MSA_Phase13_테스트전략확장.md`](Groovy_MSA_Phase13_테스트전략확장.md)
 > 범위: Spring Cloud Contract 대신 자체 구현 Consumer-Driven Contract Test(근거는 산출물
 > 문서 §1)
 

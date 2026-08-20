@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 3: Gradle Multi-Project 구조 전환
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 3
-> 선행 문서: [`Groovy_MSA_Phase2_서비스경계와Contract.md`](./Groovy_MSA_Phase2_서비스경계와Contract.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 3
+> 선행 문서: [`Groovy_MSA_Phase2_서비스경계와Contract.md`](Groovy_MSA_Phase2_서비스경계와Contract.md)
 > 목표: 모노레포는 유지하되, 서비스별로 독립 빌드/실행이 가능한 구조를 먼저 만든다.
 
 ## 1. 설계 결정 — 기존 `groovy/`는 건드리지 않는다

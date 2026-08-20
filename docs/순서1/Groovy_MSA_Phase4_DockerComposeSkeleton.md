@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 4: Docker Compose 뼈대 구축
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 4
-> 선행 문서: [`Groovy_MSA_Phase3_GradleMultiProject.md`](./Groovy_MSA_Phase3_GradleMultiProject.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 4
+> 선행 문서: [`Groovy_MSA_Phase3_GradleMultiProject.md`](Groovy_MSA_Phase3_GradleMultiProject.md)
 > 목표: 서비스를 실제로 코드에서 분리하기 전에, Compose 환경에서 여러 컨테이너가 이름 기반으로
 > 통신할 수 있는 기반부터 만든다.
 

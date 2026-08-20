@@ -1,6 +1,6 @@
 # Groovy MSA 전환 — Phase 0: 의존성 전수 조사
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 0
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 0
 > 목표: 코드를 건드리기 전에 현재 결합도를 눈에 보이게 만든다.
 > 조사 범위: `groovy/src/main/java/com/groovy/backend/domain/{study,user,memoir,calendar,notification,tag}` 전체 Service/Controller 13개
 > 조사 방법: 각 Service 클래스의 실제 import·주입 필드·트랜잭션 경계·이벤트 발행/구독을 코드 레벨에서 직접 확인 (정적 분석 기반, 실행/추정 아님)

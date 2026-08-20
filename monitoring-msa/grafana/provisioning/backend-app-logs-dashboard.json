@@ -24,7 +24,7 @@
         {
           "refId": "A",
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{container=~\".*backend.*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"INFO\""
+          "expr": "{container=~\".*(api-gateway|identity-service|study-service|content-service|calendar-service|notification-service).*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"INFO\""
         }
       ]
     },
@@ -44,7 +44,7 @@
         {
           "refId": "A",
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{container=~\".*backend.*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"WARN\""
+          "expr": "{container=~\".*(api-gateway|identity-service|study-service|content-service|calendar-service|notification-service).*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"WARN\""
         }
       ]
     },
@@ -64,7 +64,7 @@
         {
           "refId": "A",
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{container=~\".*backend.*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"ERROR\""
+          "expr": "{container=~\".*(api-gateway|identity-service|study-service|content-service|calendar-service|notification-service).*\"} | json | logger_name=~\"com.groovy.backend.*\" | level=\"ERROR\""
         }
       ]
     },
@@ -86,7 +86,7 @@
         {
           "refId": "A",
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "sum by (level) (count_over_time({container=~\".*backend.*\"} | json | logger_name=~\"com.groovy.backend.*\" [1m]))",
+          "expr": "sum by (level) (count_over_time({container=~\".*(api-gateway|identity-service|study-service|content-service|calendar-service|notification-service).*\"} | json | logger_name=~\"com.groovy.backend.*\" [1m]))",
           "legendFormat": "{{level}}"
         }
       ]

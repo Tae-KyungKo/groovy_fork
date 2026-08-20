@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 5: API Gateway 우선 도입 (Strangler Fig)
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 5
-> 선행 문서: [`Groovy_MSA_Phase4_DockerComposeSkeleton.md`](./Groovy_MSA_Phase4_DockerComposeSkeleton.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 5
+> 선행 문서: [`Groovy_MSA_Phase4_DockerComposeSkeleton.md`](Groovy_MSA_Phase4_DockerComposeSkeleton.md)
 > 목표: 클라이언트가 레거시/신규 서비스 구분 없이 하나의 진입점만 보게 한다. 이 Phase에서는
 > 계획서의 "1단계"만 진행한다 — 모든 요청을 레거시 모놀리스로 그대로 보낸다(기능 변화 없음,
 > 구조만 추가). 경로별로 신규 서비스에 나눠 보내는 "2단계"는 실제로 서비스가 추출되는

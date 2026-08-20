@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 13: 테스트 전략 확장 (Contract Test)
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 13
-> 선행 문서: [`Groovy_MSA_Phase12_분산Observability.md`](./Groovy_MSA_Phase12_분산Observability.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 13
+> 선행 문서: [`Groovy_MSA_Phase12_분산Observability.md`](Groovy_MSA_Phase12_분산Observability.md)
 > 목표: 서비스 간 API(동기 HTTP)와 이벤트(비동기 Kafka) 계약이 한쪽에서 깨졌을 때 CI에서
 > 바로 감지되게 한다.
 
@@ -10,7 +10,7 @@
 계획서는 "Spring Cloud Contract로 producer/consumer 계약 기반 테스트/stub 생성을 검토"하라고
 제안한다. 하지만 Spring Cloud Contract Verifier는 `spring-cloud-contract-dependencies` BOM에
 묶여 있고, Phase 5에서 이미 Spring Cloud 자체가 **Boot 4.0.7까지만** 검증돼 있다는 걸
-실제로 겪었다(그래서 api-gateway만 예외적으로 4.0.7에 고정, [`Groovy_MSA_Phase5_ApiGateway.md`](./Groovy_MSA_Phase5_ApiGateway.md)
+실제로 겪었다(그래서 api-gateway만 예외적으로 4.0.7에 고정, [`Groovy_MSA_Phase5_ApiGateway.md`](Groovy_MSA_Phase5_ApiGateway.md)
 참고). 계약 테스트 대상인 legacy-monolith와 notification-service는 둘 다 Boot 4.1.0이라
 Spring Cloud Contract를 끌어오면 같은 버전 충돌을 또 만날 위험이 크다 — resilience4j를
 Spring Cloud CircuitBreaker 대신 코어 라이브러리로 직접 조립했던 Phase 11과 같은 판단이다.

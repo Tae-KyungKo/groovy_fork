@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 12: 분산 Observability(분산 트레이싱)
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 12
-> 선행 문서: [`Groovy_MSA_Phase11_Resilience.md`](./Groovy_MSA_Phase11_Resilience.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 12
+> 선행 문서: [`Groovy_MSA_Phase11_Resilience.md`](Groovy_MSA_Phase11_Resilience.md)
 > 목표: 하나의 요청이 여러 서비스(동기 HTTP + 비동기 Kafka 경계 포함)를 거칠 때 동일한
 > traceId로 Tempo에서 추적하고, 로그에도 traceId를 남겨 Loki에서 검색 가능하게 한다.
 

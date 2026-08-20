@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 9: 비동기 메시지 브로커 + Transactional Outbox
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 9
-> 선행 문서: [`Groovy_MSA_Phase8_SynchronousCommunication.md`](./Groovy_MSA_Phase8_SynchronousCommunication.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 9
+> 선행 문서: [`Groovy_MSA_Phase8_SynchronousCommunication.md`](Groovy_MSA_Phase8_SynchronousCommunication.md)
 > 목표: Phase 6~8에서 동기 HTTP로 임시 연결해뒀던 legacy→notification-service 알림 흐름을
 > 정식 메시지 브로커(Kafka) + Transactional Outbox로 교체한다.
 > 브로커는 **Kafka**로 진행(사용자 지정). 계획서의 선택 기준("단순 작업 큐면 RabbitMQ")만

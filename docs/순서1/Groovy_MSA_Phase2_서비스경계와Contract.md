@@ -1,9 +1,9 @@
 # Groovy MSA 전환 — Phase 2: 서비스 경계 및 Contract 정의
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 2
-> 선행 문서: [`Groovy_MSA_Phase0_의존성분석.md`](./Groovy_MSA_Phase0_의존성분석.md),
->            [`Groovy_MSA_도메인경계_재검토.md`](./Groovy_MSA_도메인경계_재검토.md),
->            [`Groovy_MSA_Phase1_ModularMonolith.md`](./Groovy_MSA_Phase1_ModularMonolith.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 2
+> 선행 문서: [`Groovy_MSA_Phase0_의존성분석.md`](Groovy_MSA_Phase0_의존성분석.md),
+>            [`Groovy_MSA_도메인경계_재검토.md`](../Groovy_MSA_도메인경계_재검토.md),
+>            [`Groovy_MSA_Phase1_ModularMonolith.md`](Groovy_MSA_Phase1_ModularMonolith.md)
 > 목표: 어떤 서비스로 나눌지, 서비스끼리 뭘 주고받을지를 코드보다 먼저 문서로 확정한다.
 > 이 Phase는 **문서 작업만** 한다 — 코드 변경 없음(Internal API 실제 구현은 Phase 8, Event 브로커 전환은
 > Phase 9).

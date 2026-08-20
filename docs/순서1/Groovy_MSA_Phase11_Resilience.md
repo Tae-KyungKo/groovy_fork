@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 11: Resilience 적용
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 11
-> 선행 문서: [`Groovy_MSA_Phase10_AuthRedesign.md`](./Groovy_MSA_Phase10_AuthRedesign.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 11
+> 선행 문서: [`Groovy_MSA_Phase10_AuthRedesign.md`](Groovy_MSA_Phase10_AuthRedesign.md)
 > 목표: 네트워크가 낀 동기 호출에 Timeout → Retry(지수 백오프+지터) → Circuit Breaker → Fallback을
 > 적용한다.
 

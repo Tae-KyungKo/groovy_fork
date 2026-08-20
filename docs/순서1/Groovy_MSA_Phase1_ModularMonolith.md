@@ -1,8 +1,8 @@
 # Groovy MSA 전환 — Phase 1: Modular Monolith 전환
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 1
-> 선행 문서: [`Groovy_MSA_Phase0_의존성분석.md`](./Groovy_MSA_Phase0_의존성분석.md),
->            [`Groovy_MSA_도메인경계_재검토.md`](./Groovy_MSA_도메인경계_재검토.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 1
+> 선행 문서: [`Groovy_MSA_Phase0_의존성분석.md`](Groovy_MSA_Phase0_의존성분석.md),
+>            [`Groovy_MSA_도메인경계_재검토.md`](../Groovy_MSA_도메인경계_재검토.md)
 > 목표: 서비스로 쪼개기 전에 패키지(도메인) 레벨에서 "남의 Repository/Entity를 직접 못 건드리게" 만든다.
 
 ## 0. 착수 전 도메인 경계 재검토
@@ -12,7 +12,7 @@ Phase 0에서 나눈 6개 도메인(Study/User/Memoir/Calendar/Notification/Tag)
 트랜잭션/락 경계에 걸쳐 있어 이미 단일 Aggregate이고, Calendar는 개인 일정이라는 독자적 존재 이유가
 있어 Study에 흡수할 수 없다. 유일하게 재정의한 지점은 Tag — `StudyTag`(Study 소유)와
 `UserTag`(User 소유)가 하나의 패키지에 얹혀 있다는 점을 문서화하고, "Tag를 study-service에 흡수"
-결정은 Phase 2로 이관했다. 상세 근거는 [`Groovy_MSA_도메인경계_재검토.md`](./Groovy_MSA_도메인경계_재검토.md) 참고.
+결정은 Phase 2로 이관했다. 상세 근거는 [`Groovy_MSA_도메인경계_재검토.md`](../Groovy_MSA_도메인경계_재검토.md) 참고.
 
 ## 1. 적용한 규칙
 

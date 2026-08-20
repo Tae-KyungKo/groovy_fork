@@ -1,7 +1,7 @@
 # Groovy MSA 전환 — Phase 10: 인증 구조 재설계
 
-> 상위 계획: [`Groovy_MSA_전환계획.md`](./Groovy_MSA_전환계획.md) Phase 10
-> 선행 문서: [`Groovy_MSA_Phase9_MessageBrokerOutbox.md`](./Groovy_MSA_Phase9_MessageBrokerOutbox.md)
+> 상위 계획: [`Groovy_MSA_전환계획.md`](Groovy_MSA_전환계획.md) Phase 10
+> 선행 문서: [`Groovy_MSA_Phase9_MessageBrokerOutbox.md`](Groovy_MSA_Phase9_MessageBrokerOutbox.md)
 > 목표: 모든 서비스가 같은 HMAC 공유 시크릿(`JWT_SECRET_KEY`)을 쓰던 상태에서 벗어난다.
 
 ## 1. 범위 — identity-service가 아니라 legacy-monolith가 발급자
